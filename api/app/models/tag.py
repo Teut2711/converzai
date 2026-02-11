@@ -3,15 +3,16 @@ from app.models.base import TimestampMixin
 from tortoise.contrib.pydantic import pydantic_queryset_creator, pydantic_model_creator
 from typing import TYPE_CHECKING
 
+
 if TYPE_CHECKING:
     from app.models.product import Product
 
-class Category(TimestampMixin):
+class Tag(TimestampMixin):
     id = fields.IntField(pk=True)
-    name = fields.CharField(max_length=100, unique=True)
+    name = fields.CharField(max_length=50, unique=True)
 
-    products: fields.ReverseRelation["Product"]
+    products: fields.ManyToManyRelation["Product"]
 
 
-Category_Pydantic_List = pydantic_queryset_creator(Category)
-Category_Pydantic = pydantic_model_creator(Category)
+Tag_Pydantic_List = pydantic_queryset_creator(Tag)
+Tag_Pydantic = pydantic_model_creator(Tag)

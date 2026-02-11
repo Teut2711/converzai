@@ -6,12 +6,13 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from app.models.product import Product
 
-class Category(TimestampMixin):
+
+class Brand(TimestampMixin):
     id = fields.IntField(pk=True)
     name = fields.CharField(max_length=100, unique=True)
 
     products: fields.ReverseRelation["Product"]
 
 
-Category_Pydantic_List = pydantic_queryset_creator(Category)
-Category_Pydantic = pydantic_model_creator(Category)
+Brand_Pydantic_List = pydantic_queryset_creator(Brand)
+Brand_Pydantic = pydantic_model_creator(Brand)

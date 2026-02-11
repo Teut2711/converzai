@@ -4,7 +4,6 @@ Data ingestion module for e-commerce API
 Fetches product data from external API and populates MySQL database
 """
 
-import asyncio
 import httpx
 from typing import List, Dict, Any
 import os
@@ -26,81 +25,33 @@ class DataIngestionService:
         self.max_workers = int(os.getenv('INGESTION_WORKERS', '8'))
         logger.info(f"DataIngestionService initialized with URL: {self.products_url}, workers: {self.max_workers}")
     
-    async def fetch_total_pages(self) -> int:
-        """Get total number of pages from API"""
+    async def fetch_total_products(self) -> int:
+        """Get total number of products from API"""
         try:
-            response = await self.client.get(f"{self.products_url}/products", params={"limit": 1})
+            response = await self.client.get(f"{self.products_url}", params={"limit": 1})
             response.raise_for_status()
             data = response.json()
             total = data.get("total", 0)
-            pages = (total + 29) // 30  # Ceiling division
-            logger.info(f"Total products: {total}, pages: {pages}")
-            return pages
+            logger.info(f"Total products available: {total}")
+            return total
         except httpx.RequestError as e:
-            logger.error(f"Error fetching total pages: {e}")
+            logger.error(f"Error fetching total products: {e}")
             return 0
     
-    async def fetch_page(self, page: int, batch_size: int = 30) -> List[Dict[str, Any]]:
-        """Fetch a single page of products"""
+    async def fetch_all_products(self, limit: int = 100) -> List[Dict[str, Any]]:
+        """Fetch all products in a single API call"""
         try:
-            response = await self.client.get(
-
-                params={"limit": batch_size, "skip": page * batch_size}
-            )
+            logger.info(f"Fetching up to {limit} products in single API call")
+            response = await self.client.get(f"{self.products_url}", params={"limit": limit})
             response.raise_for_status()
             data = response.json()
-            return data.get("products", [])
+            products = data.get("products", [])
+            logger.info(f"Fetched {len(products)} products")
+            return products
         except httpx.RequestError as e:
-            logger.error(f"Error fetching page {page}: {e}")
+            logger.error(f"Error fetching products: {e}")
             return []
     
-    async def fetch_categories(self) -> List[str]:
-        """Fetch categories from external API"""
-        try:
-            logger.info("Fetching categories from external API")
-            response = await self.client.get(f"{self.base_url}/categories")
-            response.raise_for_status()
-            categories = response.json()
-            logger.info(f"Fetched {len(categories)} categories")
-            return categories
-        except httpx.RequestError as e:
-            logger.error(f"Error fetching categories: {e}")
-            return []
-    
-    async def fetch_products_parallel(self, limit: int = 100, batch_size: int = 30) -> List[Dict[str, Any]]:
-        """Fetch products using parallel workers"""
-        logger.info(f"Fetching up to {limit} products with {self.max_workers} workers")
-        
-        # Get total pages first
-        total_pages = await self.fetch_total_pages()
-        if total_pages == 0:
-            return []
-        
-        # Calculate pages to fetch
-        pages_to_fetch = min(total_pages, (limit + batch_size - 1) // batch_size)
-        
-        # Create semaphore to limit concurrent requests
-        semaphore = asyncio.Semaphore(self.max_workers)
-        
-        async def fetch_with_semaphore(page):
-            async with semaphore:
-                return await self.fetch_page(page, batch_size)
-        
-        # Fetch pages in parallel
-        tasks = [fetch_with_semaphore(page) for page in range(pages_to_fetch)]
-        page_results = await asyncio.gather(*tasks, return_exceptions=True)
-        
-        # Flatten results and apply limit
-        all_products = []
-        for result in page_results:
-            if isinstance(result, list):
-                all_products.extend(result)
-            else:
-                logger.error(f"Page fetch error: {result}")
-        
-        final_products = all_products[:limit]
-        logger.info(f"Fetched {len(final_products)} products from {pages_to_fetch} pages")
-        return final_products
     
     async def create_categories(self, category_names: List[str]) -> Dict[str, int]:
         """Create categories in database"""
@@ -150,7 +101,7 @@ class DataIngestionService:
                     price=float(product_data.get("price", 0)),
                     discount_percentage=float(product_data.get("discountPercentage", 0)),
                     brand=product_data.get("brand", ""),
-                    availability_status="in_stock" if product_data.get("stock", 0) > 0 else "out_of_stock",
+                    availability_status=product_data.get("availabilityStatus", "out_of_stock"),
                     rating=float(product_data.get("rating", 0)),
                     stock_quantity=product_data.get("stock", 0)
                 )
@@ -183,24 +134,21 @@ class DataIngestionService:
         return created_count
     
     async def seed_data(self, product_limit: int = 100) -> None:
-        """Seed data for the application - suitable for FastAPI lifespan"""
-        logger.info(f"Starting data seeding from {self.base_url}...")
+        """Seed data for application - suitable for FastAPI lifespan"""
+        logger.info(f"Starting data seeding from {self.products_url}...")
         
         await init_db()
         logger.info("Database initialized")
         
-        logger.info("Fetching categories...")
-        categories = await self.fetch_categories()
-        if not categories:
-            logger.warning("No categories found, using default categories")
-            categories = ["Electronics", "Clothing", "Home", "Books", "Sports", "Beauty", "Toys", "Automotive"]
+        # Use default categories since we're not fetching from API
+        categories = ["Electronics", "Clothing", "Home", "Books", "Sports", "Beauty", "Toys", "Automotive"]
         
         logger.info("Creating categories...")
         category_map = await self.create_categories(categories)
         logger.info(f"Created {len(category_map)} categories")
         
         logger.info(f"Fetching up to {product_limit} products...")
-        products_data = await self.fetch_products_parallel(product_limit)
+        products_data = await self.fetch_all_products(product_limit)
         if not products_data:
             logger.error("No products found")
             return
