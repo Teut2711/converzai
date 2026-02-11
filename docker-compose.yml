@@ -5,15 +5,18 @@ services:
       context: ./mysql
       dockerfile: Dockerfile
     container_name: ecommerce_mysql
-    env_file:
-      - .env
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     volumes:
       - mysql_data:/var/lib/mysql
     networks:
       - ecommerce_network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$$MYSQL_ROOT_PASSWORD"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -83,8 +86,8 @@ services:
     env_file:
       - .env
     environment:
-      - DATABASE_URL=mysql://app_user:app_password@mysql:3306/ecommerce
-      - ELASTICSEARCH_URL=http://elasticsearch:9200
+      - DATABASE_URL=${DB_DATABASE_URL}
+      - ELASTICSEARCH_URL=${ELASTICSEARCH_URL}
     ports:
       - "8000:8000"
     depends_on:
