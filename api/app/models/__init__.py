@@ -1,6 +1,3 @@
-"""
-Models package for e-commerce API
-"""
 
 from .product import Product, ProductCreate, ProductResponse
 from .category import Category, CategoryResponse

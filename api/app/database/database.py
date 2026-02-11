@@ -3,24 +3,34 @@ Database configuration and connection management using Tortoise ORM
 """
 
 from tortoise import Tortoise
-from tortoise.contrib.fastapi import register_tortoise
 from typing import Dict, Any
 from app.config.settings import settings
 
-
+TORTOISE_ORM: Dict[str, Any] = {
+    "connections": {
+        "default": {
+            "engine": "tortoise.backends.mysql",
+            "credentials": {
+                "dsn": settings.database_url,
+                "minsize": 5,
+                "maxsize": 20,
+                "connect_timeout": 10,
+                "charset": "utf8mb4",
+                "autocommit": True,
+            },
+        }
+    },
+    "apps": {
+        "models": {
+            "models": ["app.models"],
+            "default_connection": "default",
+        },
+    },
+}
 async def init_db():
-    """Initialize database connection"""
-    await Tortoise.init(config=settings.tortoise_config)
+    await Tortoise.init(config=TORTOISE_ORM)
     await Tortoise.generate_schemas()
 
 async def close_db():
-    """Close database connection"""
     await Tortoise.close_connections()
 
-def get_db_config() -> Dict[str, Any]:
-    """Get database configuration for FastAPI"""
-    return {
-        "db_url": settings.database_url,
-        "modules": ["app.models.product", "app.models.category"],
-        "generate_schemas": True,
-    }
