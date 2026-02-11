@@ -1,0 +1,111 @@
+
+services:
+  mysql:
+    build:
+      context: ./mysql
+      dockerfile: Dockerfile
+    container_name: ecommerce_mysql
+    env_file:
+      - .env
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - ecommerce_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$$MYSQL_ROOT_PASSWORD"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  elasticsearch:
+    build:
+      context: ./elasticsearch
+      dockerfile: Dockerfile
+    container_name: ecommerce_elasticsearch
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    networks:
+      - ecommerce_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9200/_cluster/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # Logstash
+  logstash:
+    build:
+      context: ./logstash
+      dockerfile: Dockerfile
+    container_name: ecommerce_logstash
+    depends_on:
+      - elasticsearch
+    networks:
+      - ecommerce_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9600/_node/stats"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # Kibana
+  kibana:
+    build:
+      context: ./kibana
+      dockerfile: Dockerfile
+    container_name: ecommerce_kibana
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+    networks:
+      - ecommerce_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5601/api/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # FastAPI Application
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: ecommerce_api
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=mysql://app_user:app_password@mysql:3306/ecommerce
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mysql
+      - elasticsearch
+    networks:
+      - ecommerce_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  
+  
+volumes:
+  mysql_data:
+  es_data:
+
+networks:
+  ecommerce_network:
+    driver: bridge

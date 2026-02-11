@@ -1,0 +1,15 @@
+cluster.name: "ecommerce-cluster"
+network.host: 0.0.0.0
+discovery.type: single-node
+xpack.security.enabled: false
+xpack.monitoring.collection.enabled: true
+
+# Memory settings
+ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+
+# Performance settings
+indices.memory.index_buffer_size: 10%
+indices.queries.cache.size: 5%
+
+# Logging
+logger.level: INFO
