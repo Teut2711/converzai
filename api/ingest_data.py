@@ -21,15 +21,15 @@ logger = get_logger(__name__)
 class DataIngestionService:
     
     def __init__(self):
-        self.base_url = settings.PRODUCT_API_URL
+        self.products_url = settings.PRODUCT_API_URL
         self.client = httpx.AsyncClient(timeout=30.0)
         self.max_workers = int(os.getenv('INGESTION_WORKERS', '8'))
-        logger.info(f"DataIngestionService initialized with URL: {self.base_url}, workers: {self.max_workers}")
+        logger.info(f"DataIngestionService initialized with URL: {self.products_url}, workers: {self.max_workers}")
     
     async def fetch_total_pages(self) -> int:
         """Get total number of pages from API"""
         try:
-            response = await self.client.get(f"{self.base_url}/products", params={"limit": 1})
+            response = await self.client.get(f"{self.products_url}/products", params={"limit": 1})
             response.raise_for_status()
             data = response.json()
             total = data.get("total", 0)
@@ -44,7 +44,7 @@ class DataIngestionService:
         """Fetch a single page of products"""
         try:
             response = await self.client.get(
-                f"{self.base_url}/products",
+
                 params={"limit": batch_size, "skip": page * batch_size}
             )
             response.raise_for_status()
