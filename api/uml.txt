@@ -1,0 +1,61 @@
+┌──────────────┐        1        ┌──────────────┐
+│   Category   │────────────────▶│   Product    │
+│--------------│                  │--------------│
+│ id (PK)      │                  │ id (PK)      │
+│ name (uniq)  │                  │ sku (uniq)   │
+└──────────────┘                  │ price        │
+                                  │ stock        │
+                                  │ category_id  │
+                                  │ brand_id     │
+                                  └─────┬────────┘
+                                        │
+            ┌──────────────┐            │1
+            │    Brand     │◀───────────┘
+            │--------------│
+            │ id (PK)      │
+            │ name (uniq)  │
+            └──────────────┘
+
+                 N│
+                  │
+        ┌─────────▼─────────┐
+        │       Review      │
+        │-------------------│
+        │ id (PK)           │
+        │ rating            │
+        │ product_id (FK)   │
+        └───────────────────┘
+
+                 1│
+                  │
+        ┌─────────▼─────────┐
+        │ ProductDimensions │
+        │-------------------│
+        │ id (PK)           │
+        │ width/height/depth│
+        │ product_id (FK)   │
+        └───────────────────┘
+
+                 N│
+                  │
+        ┌─────────▼─────────┐
+        │   ProductImage    │
+        │-------------------│
+        │ id (PK)           │
+        │ image_url         │
+        │ is_thumbnail      │
+        │ product_id (FK)   │
+        └───────────────────┘
+
+                 1│
+                  │
+        ┌─────────▼─────────┐
+        │    ProductMeta    │
+        │-------------------│
+        │ id (PK)           │
+        │ barcode (uniq)    │
+        │ qr_code_url       │
+        │ product_id (FK)   │
+        └───────────────────┘
+
+ Product ── N:M ── Tag (via product_tag table)
