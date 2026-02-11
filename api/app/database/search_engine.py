@@ -5,7 +5,7 @@ Elasticsearch connection management
 from typing import Optional
 
 from elasticsearch import AsyncElasticsearch
-from elasticsearch.exceptions import ElasticsearchException
+from elasticsearch.exceptions import ConnectionError, TransportError
 
 from app.config.settings import settings
 
@@ -20,32 +20,34 @@ async def init_es() -> None:
 
     es = AsyncElasticsearch(
         hosts=[settings.elasticsearch_url],
-        request_timeout=settings.elasticsearch_timeout,
-        retry_on_timeout=True,
+        timeout=settings.elasticsearch_timeout,
         max_retries=3,
+        retry_on_timeout=True,
     )
 
     try:
-        await es.info()  # fail fast
-    except ElasticsearchException:
+        await es.ping()
+        _es_client = es
+    except ConnectionError:
         await es.close()
         raise
-
-    _es_client = es
 
 
 async def close_es() -> None:
     global _es_client
 
-    if _es_client and not _es_client.closed:
-        await _es_client.close()
-
-    _es_client = None
-
-
-def get_es() -> AsyncElasticsearch:
     if _es_client is None:
-        raise RuntimeError("Elasticsearch client is not initialized")
+        return
+
+    try:
+        await _es_client.close()
+    except (ConnectionError, TransportError):
+        pass
+    finally:
+        _es_client = None
+
+
+async def get_es() -> Optional[AsyncElasticsearch]:
     return _es_client
 
 
