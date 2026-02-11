@@ -27,4 +27,4 @@ class Category(Model):
 
 
 CategoryPydantic = pydantic_model_creator(Category)
-CategoryPydanticList = pydantic_queryset_creator(CategoryPydantic)
+CategoryPydanticList = pydantic_queryset_creator(Category)
