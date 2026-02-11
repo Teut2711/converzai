@@ -88,19 +88,19 @@ services:
       - DATABASE_URL=${DB_DATABASE_URL}
       - ELASTICSEARCH_URL=${ELASTICSEARCH_URL}
     ports:
-      - "8000:8000"
+      - "8100:8000"
     depends_on:
       mysql:
         condition: service_healthy
       elasticsearch:
         condition: service_healthy
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+    # healthcheck:
+    #   test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+    #   interval: 30s
+    #   timeout: 10s
+    #   retries: 3
+    #   start_period: 40s
 
   
   

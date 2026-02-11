@@ -7,7 +7,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from app.database.database import init_db, close_db
-from app.database.connections import init_es, close_es
+from app.database.search_engine import init_es, close_es
 from app.views.v1 import v1_router
 
 @asynccontextmanager
