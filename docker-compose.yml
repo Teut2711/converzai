@@ -29,6 +29,9 @@ services:
     container_name: ecommerce_elasticsearch
     volumes:
       - es_data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+      - "9300:9300"
     networks:
       - ecommerce_network
     restart: unless-stopped
@@ -39,43 +42,43 @@ services:
       retries: 3
       start_period: 60s
 
-  # Logstash
-  logstash:
-    build:
-      context: ./logstash
-      dockerfile: Dockerfile
-    container_name: ecommerce_logstash
-    depends_on:
-      - elasticsearch
-    networks:
-      - ecommerce_network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9600/_node/stats"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
+  # Logstash - commented out for now
+  # logstash:
+  #   build:
+  #     context: ./logstash
+  #     dockerfile: Dockerfile
+  #   container_name: ecommerce_logstash
+  #   depends_on:
+  #     - elasticsearch
+  #   networks:
+  #     - ecommerce_network
+  #   restart: unless-stopped
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:9600/_node/stats"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
+  #     start_period: 60s
 
-  # Kibana
-  kibana:
-    build:
-      context: ./kibana
-      dockerfile: Dockerfile
-    container_name: ecommerce_kibana
-    ports:
-      - "5601:5601"
-    depends_on:
-      - elasticsearch
-    networks:
-      - ecommerce_network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5601/api/status"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
+  # Kibana - commented out for now
+  # kibana:
+  #   build:
+  #     context: ./kibana
+  #     dockerfile: Dockerfile
+  #   container_name: ecommerce_kibana
+  #   ports:
+  #     - "5601:5601"
+  #   depends_on:
+  #     - elasticsearch
+  #   networks:
+  #     - ecommerce_network
+  #   restart: unless-stopped
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:5601/api/status"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
+  #     start_period: 60s
 
   # FastAPI Application
   api:

@@ -1,10 +1,8 @@
-FROM docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+FROM docker.elastic.co/elasticsearch/elasticsearch-wolfi:9.3.0
 
-# Copy custom configuration files
-COPY elasticsearch.yml /usr/share/elasticsearch/config/elasticsearch.yml
+ENV discovery.type=single-node
+ENV xpack.security.enabled=false
+ENV ES_JAVA_OPTS="-Xms512m -Xmx512m"
 
-# Create data directory
-RUN mkdir -p /usr/share/elasticsearch/data
 
-# Expose ports
 EXPOSE 9200 9300
