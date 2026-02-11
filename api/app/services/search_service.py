@@ -3,8 +3,8 @@ Search service for e-commerce API using Elasticsearch
 """
 
 from typing import List, Optional, Dict, Any
-from app.models.product import Product
-from app.schemas.product import ProductOutPydantic
+from app.models.product import Product, Product_Pydantic_List, ProductPydantic
+from app.schemas.product import ProductOut
 from app.utils import get_logger
 from app.database.search_engine import get_es
 
@@ -212,7 +212,7 @@ class SearchService:
             
             
             # Use Pydantic model for consistent serialization
-            product_pydantic = ProductOutPydantic.from_tortoise_orm(product)
+            product_pydantic = ProductPydantic.from_tortoise_orm(product)
             product_doc = product_pydantic.model_dump(exclude_none=True)
             
             # Convert datetime to ISO format for Elasticsearch
