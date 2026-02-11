@@ -1,27 +1,32 @@
-FROM python:3.11-slim
+# Stage 1: Build and test stage
+FROM python:3.11-slim AS builder
 
 WORKDIR /app
-
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    gcc \
-    default-libmysqlclient-dev \
-    pkg-config \
-    netcat-traditional \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first for better caching
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
-COPY app ./app
-COPY main.py .
-COPY alembic ./alembic
+COPY . .
+
+# Run tests
+RUN python -m pytest app/tests/ -v --tb=short
+
+# Stage 2: Production stage
+FROM python:3.11-slim AS production
+
+WORKDIR /app
+
+# Install only runtime dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy only application code from builder stage
+COPY --from=builder /app .
 
 # Expose port
 EXPOSE 8000
 
-# Run the application directly
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+# Run application
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
