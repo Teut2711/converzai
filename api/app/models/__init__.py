@@ -1,11 +1,12 @@
 
-from .product import Product, ProductCreate, ProductResponse
-from .category import Category, CategoryResponse
+from .product import Product, ProductInPydantic, ProductOutPydantic
+from .category import Category, CategoryPydantic, CategoryInPydantic
 
 __all__ = [
     "Product",
-    "ProductCreate", 
-    "ProductResponse",
+    "ProductInPydantic", 
+    "ProductOutPydantic",
     "Category",
-    "CategoryResponse"
+    "CategoryPydantic",
+    "CategoryInPydantic"
 ]
