@@ -1,5 +1,6 @@
 from tortoise import fields
 from .base import TimestampMixin
+from tortoise.contrib.pydantic import pydantic_queryset_creator, pydantic_model_creator
 
 class Review(TimestampMixin):
     id = fields.IntField(pk=True)
@@ -20,3 +21,6 @@ class Review(TimestampMixin):
 
     class Meta:
         indexes = [("product_id", "rating")]
+
+Review_Pydantic_List = pydantic_queryset_creator(Review)
+Review_Pydantic = pydantic_model_creator(Review)

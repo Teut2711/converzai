@@ -32,17 +32,9 @@ class Product(TimestampMixin):
     return_policy = fields.CharField(max_length=100)
     minimum_order_quantity = fields.IntField()
 
-    category = fields.ForeignKeyField(
-        "models.Category",
-        related_name="products",
-        on_delete=fields.RESTRICT,
-    )
+    category = fields.CharField(max_length=255)
 
-    brand = fields.ForeignKeyField(
-        "models.Brand",
-        related_name="products",
-        on_delete=fields.RESTRICT,
-    )
+    brand = fields.CharField(max_length=255)
 
     tags = fields.ManyToManyField(
         "models.Tag",
