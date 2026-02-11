@@ -1,140 +1,152 @@
 #!/usr/bin/env python3
 """
-Data ingestion script for e-commerce API
-Fetches product data from dummyjson.com and populates MySQL database
+Data ingestion module for e-commerce API
+Fetches product data from external API and populates MySQL database
 """
 
-import asyncio
-import requests
-import sys
-import os
+import httpx
 from datetime import datetime
 from typing import List, Dict, Any
 from sqlalchemy.orm import Session
 from sqlalchemy import create_engine
-from dotenv import load_dotenv
 
-
-
+from app.config.settings import settings
 from app.database.database import Base, SessionLocal, engine
 from app.models.product import Product
 from app.models.category import Category
+from app.utils import get_logger
 
-load_dotenv()
+logger = get_logger(__name__)
+
 
 class DataIngestionService:
-    """Service for ingesting product data from dummyjson.com"""
     
     def __init__(self):
-        self.base_url = "https://dummyjson.com"
+        self.base_url = settings.PRODUCT_API_URL
         self.db: Session = SessionLocal()
+        self.client = httpx.AsyncClient(timeout=30.0)
+        logger.info(f"DataIngestionService initialized with URL: {self.base_url}")
     
-    async def fetch_categories(self) -> List[Dict[str, Any]]:
-        """Fetch categories from dummyjson.com"""
+    async def fetch_categories(self) -> List[str]:
+        """Fetch categories from external API"""
         try:
-            response = requests.get(f"{self.base_url}/products/categories")
+            logger.info("Fetching categories from external API")
+            response = await self.client.get(f"{self.base_url}/categories")
             response.raise_for_status()
-            return response.json()
-        except requests.RequestException as e:
-            print(f"Error fetching categories: {e}")
+            categories = response.json()
+            logger.info(f"Fetched {len(categories)} categories")
+            return categories
+        except httpx.RequestError as e:
+            logger.error(f"Error fetching categories: {e}")
             return []
     
-    async def fetch_products(self, limit: int = 100) -> List[Dict[str, Any]]:
-        """Fetch products from dummyjson.com"""
+    async def fetch_products(self, limit: int = 100, batch_size: int = 30) -> List[Dict[str, Any]]:
+        """Fetch products using standard limit/offset pagination"""
         try:
-            # Fetch products with pagination
+            logger.info(f"Fetching up to {limit} products with batch size {batch_size}")
             products = []
-            skip = 0
+            offset = 0
             total_products = 0
             
             while True:
-                response = requests.get(
+                response = await self.client.get(
                     f"{self.base_url}/products",
-                    params={"limit": 30, "skip": skip}
+                    params={"limit": batch_size, "skip": offset}
                 )
                 response.raise_for_status()
                 
                 data = response.json()
                 batch_products = data.get("products", [])
+                total_products = data.get("total", len(products))
                 
                 if not batch_products:
                     break
                 
                 products.extend(batch_products)
-                total_products = data.get("total", len(products))
                 
-                print(f"Fetched {len(products)}/{total_products} products...")
+                logger.info(f"Fetched {len(products)}/{total_products} products...")
                 
                 if len(products) >= limit or len(products) >= total_products:
                     break
                 
-                skip += 30
+                offset += batch_size
             
-            return products[:limit]
+            result = products[:limit]
+            logger.info(f"Total products fetched: {len(result)}")
+            return result
             
-        except requests.RequestException as e:
-            print(f"Error fetching products: {e}")
+        except httpx.RequestError as e:
+            logger.error(f"Error fetching products: {e}")
             return []
     
     async def create_categories(self, category_names: List[str]) -> Dict[str, int]:
         """Create categories in database"""
+        logger.info(f"Creating {len(category_names)} categories")
         category_map = {}
         
         for category_name in category_names:
-            # Generate slug from category name
             slug = category_name.lower().replace(' ', '-').replace('/', '-')
             
-            # Check if category already exists
             existing = self.db.query(Category).filter(Category.slug == slug).first()
             if existing:
                 category_map[category_name] = existing.id
+                logger.debug(f"Category already exists: {category_name}")
                 continue
             
-            # Create new category
-            category = Category(
+            from app.schemas import CategoryCreate
+            
+            # Use Pydantic model for category creation
+            category_create = CategoryCreate(
                 name=category_name,
                 slug=slug,
                 description=f"Products in {category_name} category"
             )
+            
+            category = Category(**category_create.model_dump())
             self.db.add(category)
             self.db.commit()
             self.db.refresh(category)
             
             category_map[category_name] = category.id
-            print(f"Created category: {category_name}")
+            logger.info(f"Created category: {category_name}")
         
+        logger.info(f"Categories created/processed: {len(category_map)}")
         return category_map
     
     async def create_products(self, products_data: List[Dict[str, Any]], category_map: Dict[str, int]) -> int:
         """Create products in database"""
+        logger.info(f"Creating {len(products_data)} products")
         created_count = 0
         
         for product_data in products_data:
             try:
-                # Map dummyjson fields to our model
-                product_dict = {
-                    "title": product_data.get("title", ""),
-                    "description": product_data.get("description", ""),
-                    "price": float(product_data.get("price", 0)),
-                    "discount_percentage": float(product_data.get("discountPercentage", 0)),
-                    "brand": product_data.get("brand", ""),
-                    "availability_status": "in_stock" if product_data.get("stock", 0) > 0 else "out_of_stock",
-                    "rating": float(product_data.get("rating", 0)),
-                    "stock_quantity": product_data.get("stock", 0)
-                }
+                from app.schemas import ProductCreate
+                
+                # Map external API data to Pydantic model
+                product_create = ProductCreate(
+                    title=product_data.get("title", ""),
+                    description=product_data.get("description", ""),
+                    price=float(product_data.get("price", 0)),
+                    discount_percentage=float(product_data.get("discountPercentage", 0)),
+                    brand=product_data.get("brand", ""),
+                    availability_status="in_stock" if product_data.get("stock", 0) > 0 else "out_of_stock",
+                    rating=float(product_data.get("rating", 0)),
+                    stock_quantity=product_data.get("stock", 0)
+                )
                 
                 # Set category if available
                 category_name = product_data.get("category")
                 if category_name and category_name in category_map:
-                    product_dict["category_id"] = category_map[category_name]
+                    product_create.category_id = category_map[category_name]
                 
-                # Check if product already exists (by title)
-                existing = self.db.query(Product).filter(Product.title == product_dict["title"]).first()
+                # Check for existing product
+                existing = self.db.query(Product).filter(Product.title == product_create.title).first()
                 if existing:
+                    logger.debug(f"Product already exists: {product_create.title}")
                     continue
                 
-                # Create new product
-                product = Product(**product_dict)
+                # Create product from Pydantic model
+                product = Product(**product_create.model_dump(exclude_none=True))
                 self.db.add(product)
                 self.db.commit()
                 self.db.refresh(product)
@@ -142,77 +154,62 @@ class DataIngestionService:
                 created_count += 1
                 
                 if created_count % 10 == 0:
-                    print(f"Created {created_count} products...")
+                    logger.info(f"Created {created_count} products...")
                     
             except Exception as e:
-                print(f"Error creating product {product_data.get('title', 'Unknown')}: {e}")
+                logger.error(f"Error creating product {product_data.get('title', 'Unknown')}: {e}")
                 continue
         
+        logger.info(f"Products created: {created_count}")
         return created_count
     
-    async def run_ingestion(self, product_limit: int = 100) -> None:
-        """Run the complete data ingestion process"""
-        print("Starting data ingestion...")
+    async def seed_data(self, product_limit: int = 100) -> None:
+        """Seed data for the application - suitable for FastAPI lifespan"""
+        logger.info(f"Starting data seeding from {self.base_url}...")
         
-        # Create tables if they don't exist
         Base.metadata.create_all(bind=engine)
-        print("Database tables created/verified")
+        logger.info("Database tables created/verified")
         
-        # Fetch categories
-        print("Fetching categories...")
+        logger.info("Fetching categories...")
         categories = await self.fetch_categories()
         if not categories:
-            print("No categories found, using default categories")
+            logger.warning("No categories found, using default categories")
             categories = ["Electronics", "Clothing", "Home", "Books", "Sports", "Beauty", "Toys", "Automotive"]
         
-        # Create categories
-        print("Creating categories...")
+        logger.info("Creating categories...")
         category_map = await self.create_categories(categories)
-        print(f"Created {len(category_map)} categories")
+        logger.info(f"Created {len(category_map)} categories")
         
-        # Fetch products
-        print(f"Fetching up to {product_limit} products...")
+        logger.info(f"Fetching up to {product_limit} products...")
         products_data = await self.fetch_products(product_limit)
         if not products_data:
-            print("No products found")
+            logger.error("No products found")
             return
         
-        print(f"Fetched {len(products_data)} products")
+        logger.info(f"Fetched {len(products_data)} products")
         
-        # Create products
-        print("Creating products...")
+        logger.info("Creating products...")
         created_count = await self.create_products(products_data, category_map)
         
-        print(f"\nData ingestion completed!")
-        print(f"Categories: {len(category_map)}")
-        print(f"Products created: {created_count}")
-        print(f"Total products processed: {len(products_data)}")
+        logger.info(f"Data seeding completed!")
+        logger.info(f"Categories: {len(category_map)}")
+        logger.info(f"Products created: {created_count}")
+        logger.info(f"Total products processed: {len(products_data)}")
     
-    def close(self):
-        """Close database connection"""
+    async def close(self):
+        """Close database and HTTP connections"""
+        logger.info("Closing data ingestion service connections")
+        await self.client.aclose()
         self.db.close()
 
-async def main():
-    """Main function"""
-    ingestion_service = DataIngestionService()
-    
-    try:
-        # Get product limit from command line argument or use default
-        product_limit = 100
-        if len(sys.argv) > 1:
-            try:
-                product_limit = int(sys.argv[1])
-            except ValueError:
-                print("Invalid product limit, using default: 100")
-        
-        await ingestion_service.run_ingestion(product_limit)
-        
-    except KeyboardInterrupt:
-        print("\nData ingestion interrupted by user")
-    except Exception as e:
-        print(f"Data ingestion failed: {e}")
-    finally:
-        ingestion_service.close()
 
-if __name__ == "__main__":
-    asyncio.run(main())
+async def seed_database(product_limit: int = 100) -> None:
+    """Convenience function for seeding database"""
+    logger.info(f"Starting database seeding with limit: {product_limit}")
+    ingestion_service = DataIngestionService()
+    try:
+        await ingestion_service.seed_data(product_limit)
+    except Exception as e:
+        logger.error(f"Data seeding failed: {e}")
+    finally:
+        await ingestion_service.close()

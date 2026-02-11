@@ -1,5 +1,6 @@
 from .product import ProductCreate, ProductUpdate, ProductOut
 from .category import CategoryCreate, CategoryUpdate, CategoryOut
+from .filters import CategoryFilter, ProductFilter
 
 __all__ = [
     "ProductCreate", 
@@ -7,5 +8,7 @@ __all__ = [
     "ProductOut",
     "CategoryCreate",
     "CategoryUpdate", 
-    "CategoryOut"
+    "CategoryOut",
+    "CategoryFilter",
+    "ProductFilter"
 ]
