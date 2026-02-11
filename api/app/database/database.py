@@ -11,7 +11,7 @@ TORTOISE_ORM: Dict[str, Any] = {
         "default": {
             "engine": "tortoise.backends.mysql",
             "credentials": {
-                "dsn": settings.database_url,
+                "dsn": settings.DATABASE_URL,
                 "minsize": 5,
                 "maxsize": 20,
                 "connect_timeout": 10,

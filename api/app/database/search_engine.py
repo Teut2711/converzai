@@ -19,8 +19,8 @@ async def init_es() -> None:
         return
 
     es = AsyncElasticsearch(
-        hosts=[settings.elasticsearch_url],
-        timeout=settings.elasticsearch_timeout,
+        hosts=[settings.ELASTICSEARCH_URL],
+        timeout=30,
         max_retries=3,
         retry_on_timeout=True,
     )

@@ -11,29 +11,34 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    database_url: str = Field(
+    DATABASE_URL: str = Field(
         default="mysql://app_user:app_password@mysql:3306/ecommerce",
         env="DATABASE_URL"
     )
 
-    elasticsearch_url: str = Field(
+    ELASTICSEARCH_URL: str = Field(
         default="http://elasticsearch:9200",
         env="ELASTICSEARCH_URL"
     )
 
-    debug: bool = Field(default=False, env="DEBUG")
-    api_host: str = Field(default="0.0.0.0", env="API_HOST")
-    api_port: int = Field(default=8000, env="API_PORT")
-    api_reload: bool = Field(default=True, env="API_RELOAD")
-    secret_key: str = Field(
+    DEBUG: bool = Field(default=False, env="DEBUG")
+    API_HOST: str = Field(default="0.0.0.0", env="API_HOST")
+    API_PORT: int = Field(default=8000, env="API_PORT")
+    API_RELOAD: bool = Field(default=True, env="API_RELOAD")
+    SECRET_KEY: str = Field(
         default="b64f8565b393f9101575ec971f0940345840a34d55304530ef7b568987d1f7f5",
            env="SECRET_KEY"
     )
-    log_level: str = Field(default="INFO", env="LOG_LEVEL")
+    LOG_LEVEL: str = Field(default="INFO", env="LOG_LEVEL")
 
     PRODUCT_API_URL: str = Field(
         default="https://dummyjson.com/products",
         env="PRODUCT_API_URL"
+    )
+
+    INGESTION_WORKERS: int = Field(
+        default=8,
+        env="INGESTION_WORKERS"
     )
 
     @computed_field(return_type=Path)

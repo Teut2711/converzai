@@ -3,9 +3,10 @@ Search service for e-commerce API using Elasticsearch
 """
 
 from typing import List, Optional, Dict, Any
-from ..models.product import Product
-from ..utils import get_logger
-from ..database.search_engine import get_es
+from app.models.product import Product
+from app.schemas.product import ProductOutPydantic
+from app.utils import get_logger
+from app.database.search_engine import get_es
 
 logger = get_logger(__name__)
 
@@ -209,7 +210,6 @@ class SearchService:
                 logger.error("Elasticsearch client not available")
                 return False
             
-            from ..models.product import ProductOutPydantic
             
             # Use Pydantic model for consistent serialization
             product_pydantic = ProductOutPydantic.from_tortoise_orm(product)

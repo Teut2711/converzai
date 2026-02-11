@@ -4,14 +4,13 @@ Data ingestion module for e-commerce API
 Fetches product data from external API and populates MySQL database
 """
 
+import asyncio
 import httpx
-from datetime import datetime
 from typing import List, Dict, Any
-from sqlalchemy.orm import Session
-from sqlalchemy import create_engine
+import os
 
 from app.config.settings import settings
-from app.database.database import Base, SessionLocal, engine
+from app.database.database import init_db
 from app.models.product import Product
 from app.models.category import Category
 from app.utils import get_logger
@@ -23,9 +22,37 @@ class DataIngestionService:
     
     def __init__(self):
         self.base_url = settings.PRODUCT_API_URL
-        self.db: Session = SessionLocal()
         self.client = httpx.AsyncClient(timeout=30.0)
-        logger.info(f"DataIngestionService initialized with URL: {self.base_url}")
+        self.max_workers = int(os.getenv('INGESTION_WORKERS', '8'))
+        logger.info(f"DataIngestionService initialized with URL: {self.base_url}, workers: {self.max_workers}")
+    
+    async def fetch_total_pages(self) -> int:
+        """Get total number of pages from API"""
+        try:
+            response = await self.client.get(f"{self.base_url}/products", params={"limit": 1})
+            response.raise_for_status()
+            data = response.json()
+            total = data.get("total", 0)
+            pages = (total + 29) // 30  # Ceiling division
+            logger.info(f"Total products: {total}, pages: {pages}")
+            return pages
+        except httpx.RequestError as e:
+            logger.error(f"Error fetching total pages: {e}")
+            return 0
+    
+    async def fetch_page(self, page: int, batch_size: int = 30) -> List[Dict[str, Any]]:
+        """Fetch a single page of products"""
+        try:
+            response = await self.client.get(
+                f"{self.base_url}/products",
+                params={"limit": batch_size, "skip": page * batch_size}
+            )
+            response.raise_for_status()
+            data = response.json()
+            return data.get("products", [])
+        except httpx.RequestError as e:
+            logger.error(f"Error fetching page {page}: {e}")
+            return []
     
     async def fetch_categories(self) -> List[str]:
         """Fetch categories from external API"""
@@ -40,44 +67,40 @@ class DataIngestionService:
             logger.error(f"Error fetching categories: {e}")
             return []
     
-    async def fetch_products(self, limit: int = 100, batch_size: int = 30) -> List[Dict[str, Any]]:
-        """Fetch products using standard limit/offset pagination"""
-        try:
-            logger.info(f"Fetching up to {limit} products with batch size {batch_size}")
-            products = []
-            offset = 0
-            total_products = 0
-            
-            while True:
-                response = await self.client.get(
-                    f"{self.base_url}/products",
-                    params={"limit": batch_size, "skip": offset}
-                )
-                response.raise_for_status()
-                
-                data = response.json()
-                batch_products = data.get("products", [])
-                total_products = data.get("total", len(products))
-                
-                if not batch_products:
-                    break
-                
-                products.extend(batch_products)
-                
-                logger.info(f"Fetched {len(products)}/{total_products} products...")
-                
-                if len(products) >= limit or len(products) >= total_products:
-                    break
-                
-                offset += batch_size
-            
-            result = products[:limit]
-            logger.info(f"Total products fetched: {len(result)}")
-            return result
-            
-        except httpx.RequestError as e:
-            logger.error(f"Error fetching products: {e}")
+    async def fetch_products_parallel(self, limit: int = 100, batch_size: int = 30) -> List[Dict[str, Any]]:
+        """Fetch products using parallel workers"""
+        logger.info(f"Fetching up to {limit} products with {self.max_workers} workers")
+        
+        # Get total pages first
+        total_pages = await self.fetch_total_pages()
+        if total_pages == 0:
             return []
+        
+        # Calculate pages to fetch
+        pages_to_fetch = min(total_pages, (limit + batch_size - 1) // batch_size)
+        
+        # Create semaphore to limit concurrent requests
+        semaphore = asyncio.Semaphore(self.max_workers)
+        
+        async def fetch_with_semaphore(page):
+            async with semaphore:
+                return await self.fetch_page(page, batch_size)
+        
+        # Fetch pages in parallel
+        tasks = [fetch_with_semaphore(page) for page in range(pages_to_fetch)]
+        page_results = await asyncio.gather(*tasks, return_exceptions=True)
+        
+        # Flatten results and apply limit
+        all_products = []
+        for result in page_results:
+            if isinstance(result, list):
+                all_products.extend(result)
+            else:
+                logger.error(f"Page fetch error: {result}")
+        
+        final_products = all_products[:limit]
+        logger.info(f"Fetched {len(final_products)} products from {pages_to_fetch} pages")
+        return final_products
     
     async def create_categories(self, category_names: List[str]) -> Dict[str, int]:
         """Create categories in database"""
@@ -87,7 +110,7 @@ class DataIngestionService:
         for category_name in category_names:
             slug = category_name.lower().replace(' ', '-').replace('/', '-')
             
-            existing = self.db.query(Category).filter(Category.slug == slug).first()
+            existing = await Category.get_or_none(slug=slug)
             if existing:
                 category_map[category_name] = existing.id
                 logger.debug(f"Category already exists: {category_name}")
@@ -103,9 +126,7 @@ class DataIngestionService:
             )
             
             category = Category(**category_create.model_dump())
-            self.db.add(category)
-            self.db.commit()
-            self.db.refresh(category)
+            await category.save()
             
             category_map[category_name] = category.id
             logger.info(f"Created category: {category_name}")
@@ -140,16 +161,14 @@ class DataIngestionService:
                     product_create.category_id = category_map[category_name]
                 
                 # Check for existing product
-                existing = self.db.query(Product).filter(Product.title == product_create.title).first()
+                existing = await Product.get_or_none(title=product_create.title)
                 if existing:
                     logger.debug(f"Product already exists: {product_create.title}")
                     continue
                 
                 # Create product from Pydantic model
                 product = Product(**product_create.model_dump(exclude_none=True))
-                self.db.add(product)
-                self.db.commit()
-                self.db.refresh(product)
+                await product.save()
                 
                 created_count += 1
                 
@@ -167,8 +186,8 @@ class DataIngestionService:
         """Seed data for the application - suitable for FastAPI lifespan"""
         logger.info(f"Starting data seeding from {self.base_url}...")
         
-        Base.metadata.create_all(bind=engine)
-        logger.info("Database tables created/verified")
+        await init_db()
+        logger.info("Database initialized")
         
         logger.info("Fetching categories...")
         categories = await self.fetch_categories()
@@ -181,7 +200,7 @@ class DataIngestionService:
         logger.info(f"Created {len(category_map)} categories")
         
         logger.info(f"Fetching up to {product_limit} products...")
-        products_data = await self.fetch_products(product_limit)
+        products_data = await self.fetch_products_parallel(product_limit)
         if not products_data:
             logger.error("No products found")
             return
@@ -191,16 +210,15 @@ class DataIngestionService:
         logger.info("Creating products...")
         created_count = await self.create_products(products_data, category_map)
         
-        logger.info(f"Data seeding completed!")
+        logger.info("Data seeding completed!")
         logger.info(f"Categories: {len(category_map)}")
         logger.info(f"Products created: {created_count}")
         logger.info(f"Total products processed: {len(products_data)}")
     
     async def close(self):
-        """Close database and HTTP connections"""
+        """Close HTTP connections"""
         logger.info("Closing data ingestion service connections")
         await self.client.aclose()
-        self.db.close()
 
 
 async def seed_database(product_limit: int = 100) -> None:

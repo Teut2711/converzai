@@ -3,9 +3,9 @@ Product service for e-commerce API using Tortoise ORM
 """
 
 from typing import List, Optional
-from ..models.product import Product, ProductOutPydantic
-from ..schemas import ProductCreate, ProductUpdate, ProductOut, ProductFilter
-from ..utils import get_logger
+from app.models import Product, ProductOutPydantic
+from app.schemas import ProductCreate, ProductUpdate, ProductOut, ProductFilter
+from app.utils import get_logger
 
 logger = get_logger(__name__)
 
