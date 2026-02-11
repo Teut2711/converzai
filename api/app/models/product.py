@@ -7,6 +7,8 @@ from tortoise import fields
 from tortoise.contrib.pydantic import pydantic_model_creator, pydantic_queryset_creator
 from tortoise.exceptions import NoValuesFetched
 from typing import Optional
+from pydantic import BaseModel
+
 
 class Product(Model):
     id = fields.IntField(pk=True, index=True)
