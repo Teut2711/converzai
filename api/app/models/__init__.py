@@ -1,17 +1,35 @@
+from .product import Product, Product_Pydantic, Product_Pydantic_List
+from .dimensions import ProductDimensions, ProductDimensions_Pydantic, ProductDimensions_Pydantic_List
+from .image import ProductImage, ProductImage_Pydantic, ProductImage_Pydantic_List
+from .review import Review, Review_Pydantic, Review_Pydantic_List
+from .meta import ProductMeta, ProductMeta_Pydantic, ProductMeta_Pydantic_List
+from .tag import Tag, Tag_Pydantic, Tag_Pydantic_List
 
-from .dimensions import ProductDimensions
-from .image import ProductImage
-from .review import Review
-from .meta import ProductMeta
-from .tag import Tag
-from .product import Product
 
 __all__ = [
     "Product",
+    "Product_Pydantic", 
+    "Product_Pydantic_List",
+
     "ProductDimensions",
+    "ProductDimensions_Pydantic",
+    "ProductDimensions_Pydantic_List",
+
+
     "ProductImage",
+    "ProductImage_Pydantic",
+    "ProductImage_Pydantic_List",
+    
+    
     "Review",
+    "Review_Pydantic",
+    "Review_Pydantic_List",
+    
     "ProductMeta",
+    "ProductMeta_Pydantic",
+    "ProductMeta_Pydantic_List",
+
     "Tag",
-    "ProductDimensions"
+    "Tag_Pydantic",
+    "Tag_Pydantic_List",
 ]
