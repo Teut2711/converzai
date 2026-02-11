@@ -4,7 +4,7 @@ Product models for e-commerce API using Tortoise ORM
 
 from tortoise.models import Model
 from tortoise import fields
-from tortoise.contrib.pydantic import pydantic_model_creator
+from tortoise.contrib.pydantic import pydantic_model_creator, pydantic_queryset_creator
 from tortoise.exceptions import NoValuesFetched
 from typing import Optional
 
@@ -49,3 +49,4 @@ class Product(Model):
 ProductPydantic = pydantic_model_creator(Product, name="Product")
 ProductInPydantic = pydantic_model_creator(Product, name="ProductIn", exclude_readonly=True)
 ProductOutPydantic = pydantic_model_creator(Product, name="ProductOut", exclude=("category",))
+ProductOutPydanticList = pydantic_queryset_creator(ProductOutPydantic)

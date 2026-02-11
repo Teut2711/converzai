@@ -3,10 +3,7 @@ Product service for e-commerce API using Tortoise ORM
 """
 
 from typing import List, Optional
-from ..models.product import Product, ProductOutPydantic
-from tortoise.contrib.pydantic import pydantic_queryset_creator
-
-ProductOutPydanticList = pydantic_queryset_creator(ProductOutPydantic)
+from ..models.product import Product, ProductOutPydantic, ProductOutPydanticList
 
 class ProductService:
     

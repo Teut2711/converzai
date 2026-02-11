@@ -2,7 +2,7 @@
 
 from tortoise.models import Model
 from tortoise import fields
-from tortoise.contrib.pydantic import pydantic_model_creator
+from tortoise.contrib.pydantic import pydantic_model_creator, pydantic_queryset_creator
 
 class Category(Model):
     id = fields.IntField(pk=True, index=True)
@@ -20,3 +20,4 @@ class Category(Model):
 
 CategoryPydantic = pydantic_model_creator(Category, name="Category")
 CategoryInPydantic = pydantic_model_creator(Category, name="CategoryIn", exclude_readonly=True)
+CategoryPydanticList = pydantic_queryset_creator(CategoryPydantic)

@@ -3,10 +3,7 @@ Category service for e-commerce API using Tortoise ORM
 """
 
 from typing import List, Optional
-from ..models.category import Category, CategoryPydantic
-from tortoise.contrib.pydantic import pydantic_queryset_creator
-
-CategoryPydanticList = pydantic_queryset_creator(CategoryPydantic)
+from ..models.category import Category, CategoryPydantic, CategoryPydanticList
 
 class CategoryService:
     
