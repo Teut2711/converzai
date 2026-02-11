@@ -31,11 +31,6 @@ class Settings(BaseSettings):
     )
     LOG_LEVEL: str = Field(default="INFO", env="LOG_LEVEL")
 
-    PRODUCT_API_URL: str = Field(
-        default="https://dummyjson.com/products",
-        env="PRODUCT_API_URL"
-    )
-
     INGESTION_WORKERS: int = Field(
         default=8,
         env="INGESTION_WORKERS"
@@ -45,6 +40,11 @@ class Settings(BaseSettings):
     @property
     def BASE_DIR(self) -> Path:
         return Path(__file__).parent.parent.parent
+
+    PRODUCT_API_URL: str = Field(
+        default="https://dummyjson.com/products",
+        env="PRODUCT_API_URL"
+    )
 
 
 settings = Settings()

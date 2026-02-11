@@ -3,7 +3,7 @@ Product service for e-commerce API using Tortoise ORM
 """
 
 from typing import List, Optional
-from app.models import Product, ProductOutPydantic
+from app.models import Product, ProductPydantic, Product_Pydantic_List
 from app.schemas import ProductCreate, ProductUpdate, ProductOut, ProductFilter
 from app.utils import get_logger
 
@@ -36,20 +36,19 @@ class ProductService:
                 if field in filter_data:
                     query = query.filter(**{db_field: filter_data[field]})
         
-        products = await query
-        product_pydantics = [await ProductOutPydantic.from_tortoise_orm(prod) for prod in products]
+        product_pydantics = Product_Pydantic_List.from_queryset(query)
         return [ProductOut(**prod.model_dump()) for prod in product_pydantics]
     
     async def get_product_by_id(self, product_id: int) -> Optional[ProductOut]:
         product = await Product.get_or_none(id=product_id).prefetch_related('category')
         if not product:
             return None
-        product_pydantic = await ProductOutPydantic.from_tortoise_orm(product)
+        product_pydantic = ProductPydantic.from_tortoise_orm(product)
         return ProductOut(**product_pydantic.model_dump())
     
     async def get_products_by_category(self, category_name: str) -> List[ProductOut]:
         products = await Product.filter(category__name=category_name).order_by('-created_at').prefetch_related('category')
-        product_pydantics = [await ProductOutPydantic.from_tortoise_orm(prod) for prod in products]
+        product_pydantics = Product_Pydantic_List.from_queryset(products)
         return [ProductOut(**prod.model_dump()) for prod in product_pydantics]
     
     async def create_product(self, product_data: ProductCreate) -> ProductOut:
@@ -57,7 +56,7 @@ class ProductService:
         
         product = await Product.create(**product_data.model_dump(exclude_none=True))
         await product.fetch_related('category')
-        product_pydantic = await ProductOutPydantic.from_tortoise_orm(product)
+        product_pydantic = ProductPydantic.from_tortoise_orm(product)
         return ProductOut(**product_pydantic.model_dump())
     
     async def update_product(self, product_id: int, product_data: ProductUpdate) -> Optional[ProductOut]:
@@ -73,7 +72,7 @@ class ProductService:
             await product.update_from_dict(update_data).save()
         
         await product.fetch_related('category')
-        product_pydantic = await ProductOutPydantic.from_tortoise_orm(product)
+        product_pydantic = ProductPydantic.from_tortoise_orm(product)
         return ProductOut(**product_pydantic.model_dump())
     
     async def delete_product(self, product_id: int) -> bool:
@@ -97,5 +96,5 @@ class ProductService:
         ).filter(
             brand__icontains=query
         ).order_by('-created_at').prefetch_related('category')
-        product_pydantics = [await ProductOutPydantic.from_tortoise_orm(prod) for prod in products]
+        product_pydantics = Product_Pydantic_List.from_queryset(products)
         return [ProductOut(**prod.model_dump()) for prod in product_pydantics]
