@@ -3,10 +3,10 @@ uvicorn[standard]
 tortoise-orm
 elasticsearch
 pydantic
-aiohttp
 pydantic-settings
 pytest
 pytest-asyncio
 pytest-cov
 httpx
 mysql-connector-python
+aiomysql
