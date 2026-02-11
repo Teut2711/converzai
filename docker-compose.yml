@@ -32,8 +32,6 @@ services:
     ports:
       - "9200:9200"
       - "9300:9300"
-    networks:
-      - ecommerce_network
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9200/_cluster/health"]
@@ -96,8 +94,6 @@ services:
     depends_on:
       - mysql
       - elasticsearch
-    networks:
-      - ecommerce_network
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
@@ -112,6 +108,4 @@ volumes:
   mysql_data:
   es_data:
 
-networks:
-  ecommerce_network:
-    driver: bridge
+
