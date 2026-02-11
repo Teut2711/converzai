@@ -46,7 +46,9 @@ class Product(Model):
         computed = ("final_price", "category_name")
         exclude = ("category",)
 
-ProductPydantic = pydantic_model_creator(Product, name="Product")
-ProductInPydantic = pydantic_model_creator(Product, name="ProductIn", exclude_readonly=True)
-ProductOutPydantic = pydantic_model_creator(Product, name="ProductOut", exclude=("category",))
-ProductOutPydanticList = pydantic_queryset_creator(ProductOutPydantic)
+
+
+ProductPydantic = pydantic_model_creator(Product)
+Product_Pydantic_List = pydantic_queryset_creator(Product)
+
+

@@ -18,6 +18,5 @@ class Category(Model):
     def __str__(self):
         return f"Category(id={self.id}, name='{self.name}')"
 
-CategoryPydantic = pydantic_model_creator(Category, name="Category")
-CategoryInPydantic = pydantic_model_creator(Category, name="CategoryIn", exclude_readonly=True)
+CategoryPydantic = pydantic_model_creator(Category)
 CategoryPydanticList = pydantic_queryset_creator(CategoryPydantic)
