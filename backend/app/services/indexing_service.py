@@ -98,11 +98,29 @@ class IndexingService:
                 logger.error("Elasticsearch client not available")
                 return 0
             
+            # Prepare documents for bulk indexing
+            docs = []
+            for product in products:
+                try:
+                    # Convert ORM to Pydantic for serialization
+                    product_pydantic = await Product_Pydantic.from_tortoise_orm(product)
+                    
+                    # Add document in Elasticsearch bulk format
+                    docs.append({
+                        "_index": self.search_service.index_name,
+                        "_id": str(product_pydantic.id),
+                        **product_pydantic.model_dump()
+                    })
+                    
+                except Exception as e:
+                    logger.error(f"Error preparing product {product.id} for bulk indexing: {e}")
+                    continue
+            
             # Use async_bulk helper for efficient bulk indexing
             success_count = 0
             async for ok, response in helpers.async_bulk(
                 es_client, 
-                generate_docs(), 
+                docs, 
                 chunk_size=100,
                 request_timeout=60
             ):

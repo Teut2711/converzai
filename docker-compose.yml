@@ -7,7 +7,8 @@ services:
     container_name: ecommerce_mysql
     env_file:
       - .env
-    
+    ports:
+      - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
     restart: unless-stopped

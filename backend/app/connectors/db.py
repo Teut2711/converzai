@@ -35,7 +35,7 @@ TORTOISE_ORM: Dict[str, Any] = {
 _instance: Optional[RegisterTortoise] = None 
 async def init_db(app: FastAPI) -> None:
     global _instance
-    _instance = RegisterTortoise(app, config=TORTOISE_ORM)
+    _instance = RegisterTortoise(app, config=TORTOISE_ORM, generate_schemas=True)
     await _instance.init_orm()
 
 async def close_db() -> None:
