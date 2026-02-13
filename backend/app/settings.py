@@ -2,6 +2,7 @@
 from pydantic import Field, computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pathlib import Path
+import os
 
 
 class Settings(BaseSettings):
@@ -11,10 +12,31 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    DATABASE_URL: str = Field(
-        default="mysql://app_user:app_password@mysql:3306/ecommerce",
-        env="DATABASE_URL"
-    )
+    DB_ROOT_PASSWORD: str = Field(default="root_password", env="DB_ROOT_PASSWORD")
+    DB_DRIVER: str = Field(default="mysql", env="DB_DRIVER")
+    DB_DATABASE: str = Field(default="ecommerce", env="DB_DATABASE")
+    DB_USER: str = Field(default="app_user", env="DB_USER")
+    DB_PASSWORD: str = Field(default="app_password", env="DB_PASSWORD")
+    DB_HOST: str = Field(default="mysql", env="DB_HOST")
+    DB_PORT: int = Field(default=3306, env="DB_PORT")
+
+
+    @property
+    def DATABASE_URL(self) -> str:
+        direct_url = os.getenv("DATABASE_URL")
+        if direct_url:
+            return direct_url
+        
+        if self.DB_DRIVER == "postgresql":
+            return f"postgresql://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_DATABASE}"
+        elif self.DB_DRIVER == "mysql":
+            return f"mysql://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_DATABASE}"
+        elif self.DB_DRIVER == "sqlite":
+            return f"sqlite:///{self.DB_DATABASE}.db"
+        else:
+            return f"mysql://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_DATABASE}"
+
+ 
 
     ELASTICSEARCH_URL: str = Field(
         default="http://elasticsearch:9200",

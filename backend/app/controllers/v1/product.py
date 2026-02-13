@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 from app.services import ProductService
 from app.services import SearchService
 from app.models import Product_Pydantic_List
-from backend.app.models.product import Product_Pydantic
+from app.models.product import Product_Pydantic
 
 
 router = APIRouter(prefix="/products", tags=["products"])

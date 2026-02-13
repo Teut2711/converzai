@@ -6,6 +6,7 @@ from tortoise import Tortoise
 from typing import Dict, Any
 from app.settings import settings
 
+print(settings.DATABASE_URL)
 TORTOISE_ORM: Dict[str, Any] = {
     "connections": {
         "default": {
