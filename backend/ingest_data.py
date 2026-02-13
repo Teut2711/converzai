@@ -172,7 +172,6 @@ class DataIngestionService:
             logger.warning("No products to index")
 
     async def _create_or_get_category(self, category_name):
-        """Create or get category - Single Responsibility: Category management"""
         if not category_name:
             return None
 
@@ -182,7 +181,6 @@ class DataIngestionService:
         return category
 
     async def _create_or_get_brand(self, brand_name):
-        """Create or get brand - Single Responsibility: Brand management"""
         if not brand_name:
             return None
 
@@ -192,7 +190,6 @@ class DataIngestionService:
         return brand
 
     async def _create_product(self, product_data, category, brand):
-        """Create product - Single Responsibility: Product creation"""
         return await Product.create(
             title=product_data.get("title", ""),
             description=product_data.get("description", ""),
@@ -212,7 +209,6 @@ class DataIngestionService:
         )
 
     async def _add_tags_to_product(self, product, tags):
-        """Add tags to product - Single Responsibility: Tag relationships"""
         for tag_name in tags:
             tag, _ = await Tag.get_or_create(
                 name=tag_name, defaults={"slug": tag_name.lower().replace(" ", "-")}
@@ -220,7 +216,6 @@ class DataIngestionService:
             await product.tags.add(tag)
 
     async def _create_product_dimensions(self, product, dimensions_data):
-        """Create product dimensions - Single Responsibility: Dimensions management"""
         if dimensions_data:
             await ProductDimensions.create(
                 width=float(dimensions_data.get("width", 0)),
@@ -230,8 +225,6 @@ class DataIngestionService:
             )
 
     async def _create_product_images(self, product, images, thumbnail):
-        """Create product images - Single Responsibility: Image management"""
-        # Handle regular images
         for image_url in images:
             await ProductImage.create(
                 image_url=image_url, is_thumbnail=False, product=product
@@ -244,7 +237,6 @@ class DataIngestionService:
             )
 
     async def _create_product_reviews(self, product, reviews):
-        """Create product reviews - Single Responsibility: Review management"""
         for review_data in reviews:
             await Review.create(
                 rating=int(review_data.get("rating", 0)),
@@ -258,7 +250,6 @@ class DataIngestionService:
             )
 
     async def _create_product_meta(self, product, meta_data):
-        """Create product meta data - Single Responsibility: Meta data management"""
         if meta_data:
             await ProductMeta.create(
                 barcode=meta_data.get("barcode", ""),
