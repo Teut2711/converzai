@@ -25,7 +25,6 @@ async def lifespan(app: FastAPI):
     
     # Load seed data using DataIngestionService
     ingestion_service = DataIngestionService()
-    ingestion_service.ingest()
     try:
         await ingestion_service.load_seed_data()
     except Exception as e:

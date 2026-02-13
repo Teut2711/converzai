@@ -13,14 +13,15 @@ from app.models import (
 )
 from datetime import datetime
 from tortoise.transactions import in_transaction
-from app.services import IndexingService
-
+from app.models import Product_Pydantic
 logger = get_logger(__name__)
 
 
 class DataIngestionService:
 
     def __init__(self):
+        from . import IndexingService
+
         self.products_url = settings.PRODUCT_API_URL
         self.client = httpx.AsyncClient(timeout=30.0)
         self.indexing_service = IndexingService()

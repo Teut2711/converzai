@@ -1,10 +1,10 @@
 from typing import Dict, Any, List
 from app.models import Product_Pydantic
 from app.models import Product as ProductModel
-from app import SearchService
+from . import SearchService
 from app.utils import get_logger
 from elasticsearch import helpers
-from app.database import get_es
+from app.connectors import get_es
 logger = get_logger(__name__)
 
 

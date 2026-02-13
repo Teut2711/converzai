@@ -44,7 +44,7 @@ async def close_es() -> None:
         _es_client = None
 
 
-async def get_es() -> Optional[AsyncElasticsearch]:
+def get_es() -> Optional[AsyncElasticsearch]:
     return _es_client
 
 

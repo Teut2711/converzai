@@ -8,7 +8,7 @@ from datetime import datetime
 from decimal import Decimal
 from app.models.product import Product_Pydantic
 from app.utils import get_logger
-from app.database.search_engine import get_es
+from app.connectors import get_es
 
 logger = get_logger(__name__)
 
