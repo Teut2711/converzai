@@ -2,12 +2,11 @@
 Search views for e-commerce API v1
 """
 
-from fastapi import APIRouter, HTTPException, Depends, Query
+from fastapi import APIRouter, HTTPException, Depends
 from typing import List
 
-from pydantic import BaseModel
 from app.services.product_service import ProductService
-from app.settings import settings
+
 
 router = APIRouter(prefix="/categories", tags=["search"])
 

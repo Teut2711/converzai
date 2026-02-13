@@ -42,10 +42,24 @@ class ProductService:
         product_pydantics = await Product_Pydantic_List.from_queryset(await query)
         return product_pydantics
 
+    async def get_products_by_category(
+        self, category_name: str, pagination: Optional[Pagination]
+    ) -> List[Product_Pydantic_List]:
+        """Get products filtered by category with pagination"""
+        
+        query = Product.filter(category__name=category_name).order_by("-created_at")
+        
+        if pagination:
+            query = query.offset(pagination.offset).limit(pagination.limit)
+
+        product_pydantics = await Product_Pydantic_List.from_queryset(query)
+        return product_pydantics
+    
     async def get_product_by_id(self, product_id: int) -> Optional[Product_Pydantic]:
         product = await Product.get_or_none(id=product_id)
         
+        if not product:
+            return None
+            
         product_pydantic = await Product_Pydantic.from_tortoise_orm(product)
         return product_pydantic
-    
- 

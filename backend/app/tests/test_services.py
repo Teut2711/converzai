@@ -3,13 +3,9 @@ Service layer tests for e-commerce API
 """
 
 import pytest
-from unittest.mock import AsyncMock, patch, MagicMock
+from unittest.mock import AsyncMock, patch
 from app.services.product_service import ProductService
-from app.services.category_service import CategoryService
 from app.services.search_service import SearchService
-from app.models.product import Product
-from app.models.category import Category
-
 
 @pytest.mark.asyncio
 async def test_product_service_get_all_products_empty(sample_category):

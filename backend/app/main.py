@@ -9,7 +9,7 @@ from contextlib import asynccontextmanager
 from app.database.database import init_db, close_db
 from app.database.search_engine import init_es, close_es
 from ingest_data import DataIngestionService
-from app.views.v1 import v1_router
+from app.controllers.v1 import v1_router
 from app.utils import get_logger
 
 logger = get_logger(__name__)
