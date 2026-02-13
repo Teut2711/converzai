@@ -27,6 +27,7 @@ TORTOISE_ORM: Dict[str, Any] = {
             "default_connection": "default",
         },
     },
+    "generate_schemas": True,
 }
 
 
