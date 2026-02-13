@@ -8,54 +8,25 @@ from fastapi.middleware.cors import CORSMiddleware
 from typing import Dict, Any
 from contextlib import asynccontextmanager
 from app.database.search_engine import init_es, close_es
-from ingest_data import DataIngestionService
+from app.services import DataIngestionService
 from app.controllers.v1 import v1_router
 from app.utils import get_logger
-from tortoise.contrib.fastapi import RegisterTortoise
+from app.connectors.db import init_db, close_db
 from app.settings import settings
   
 
  
-TORTOISE_ORM: Dict[str, Any] = {
-    "connections": {
-        "default": {
-            "engine": f"tortoise.backends.{settings.DB_DRIVER}",
-            "credentials": {
-                "host": settings.DB_HOST,
-                "port": settings.DB_PORT,
-                "user": settings.DB_USER,
-                "password": settings.DB_PASSWORD,
-                "database": settings.DB_DATABASE,
-                "minsize": 5,
-                "maxsize": 20,
-                "connect_timeout": 10,
-                "charset": "utf8mb4",
-                "autocommit": True,
-            },
-        }
-    },
-    "apps": {
-        "models": {
-            "models": ["app.models"],
-            "default_connection": "default",
-        },
-    },
-}
-
-
-
 logger = get_logger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Initialize database and Elasticsearch
-    instance = RegisterTortoise(app, config=TORTOISE_ORM)
-    await instance.init_orm()
-
+    await init_db(app)
     await init_es()
     
     # Load seed data using DataIngestionService
     ingestion_service = DataIngestionService()
+    ingestion_service.ingest()
     try:
         await ingestion_service.load_seed_data()
     except Exception as e:
@@ -65,7 +36,7 @@ async def lifespan(app: FastAPI):
     
     # Cleanup
     await ingestion_service.close()
-    await instance.close_orm()
+    await close_db()
     await close_es()
 
 app = FastAPI(

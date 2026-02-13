@@ -1,9 +1,10 @@
 from typing import Dict, Any, List
 from app.models import Product_Pydantic
 from app.models import Product as ProductModel
-from app.services.search_service import SearchService
+from app import SearchService
 from app.utils import get_logger
-
+from elasticsearch import helpers
+from app.database import get_es
 logger = get_logger(__name__)
 
 
@@ -16,6 +17,7 @@ class IndexingService:
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super().__new__(cls)
+            cls._es = get_es()
         return cls._instance
 
     def __init__(self):
@@ -57,7 +59,7 @@ class IndexingService:
 
     async def bulk_index_products(self, products: List[ProductModel]) -> int:
         """
-        Bulk index multiple products to Elasticsearch.
+        Bulk index multiple products to Elasticsearch using async_bulk helper.
         
         Args:
             products: List of Product ORM models
@@ -65,24 +67,58 @@ class IndexingService:
         Returns:
             int: Number of successfully indexed products
         """
+        if not products:
+            logger.info("No products to index")
+            return 0
+            
         logger.info(f"Bulk indexing {len(products)} products")
-
-        indexed_count = 0
-        for product in products:
-            try:
-                success = await self.index_product(product)
-                if success:
-                    indexed_count += 1
-
-                if indexed_count % 10 == 0:
-                    logger.info(f"Indexed {indexed_count} products...")
-
-            except Exception as e:
-                logger.error(f"Error indexing product {product.id}: {e}")
-                continue
-
-        logger.info(f"Bulk indexing completed: {indexed_count}/{len(products)} products")
-        return indexed_count
+        
+        async def generate_docs():
+            """Generator that yields documents for bulk indexing"""
+            for product in products:
+                try:
+                    # Convert ORM to Pydantic for serialization
+                    product_pydantic = await Product_Pydantic.from_tortoise_orm(product)
+                    
+                    # Yield document in Elasticsearch bulk format
+                    yield {
+                        "_index": self.search_service.index_name,
+                        "_id": str(product_pydantic.id),
+                        **product_pydantic.model_dump()
+                    }
+                    
+                except Exception as e:
+                    logger.error(f"Error preparing product {product.id} for bulk indexing: {e}")
+                    continue
+        
+        try:
+            # Get Elasticsearch client
+            es_client = self.search_service._es
+            if es_client is None:
+                logger.error("Elasticsearch client not available")
+                return 0
+            
+            # Use async_bulk helper for efficient bulk indexing
+            success_count = 0
+            async for ok, response in helpers.async_bulk(
+                es_client, 
+                generate_docs(), 
+                chunk_size=100,
+                request_timeout=60
+            ):
+                if ok:
+                    success_count += 1
+                    if success_count % 100 == 0:
+                        logger.info(f"Successfully indexed {success_count} products...")
+                else:
+                    logger.warning(f"Failed to index document: {response}")
+            
+            logger.info(f"Bulk indexing completed: {success_count}/{len(products)} products")
+            return success_count
+            
+        except Exception as e:
+            logger.error(f"Error during bulk indexing: {e}")
+            return 0
 
     async def delete_product_index(self, product_id: int) -> bool:
         """

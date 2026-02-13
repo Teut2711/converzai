@@ -5,7 +5,7 @@ Search views for e-commerce API v1
 from fastapi import APIRouter, HTTPException, Depends
 from typing import List
 
-from app.services.product_service import ProductService
+from app.services import ProductService
 
 
 router = APIRouter(prefix="/categories", tags=["search"])

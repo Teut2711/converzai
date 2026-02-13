@@ -13,7 +13,7 @@ from app.models import (
 )
 from datetime import datetime
 from tortoise.transactions import in_transaction
-from app.services.indexing_service import IndexingService
+from app.services import IndexingService
 
 logger = get_logger(__name__)
 
