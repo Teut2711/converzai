@@ -5,11 +5,9 @@ services:
       context: ./mysql
       dockerfile: Dockerfile
     container_name: ecommerce_mysql
-    environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    env_file:
+      - .env
+    
     volumes:
       - mysql_data:/var/lib/mysql
     restart: unless-stopped
@@ -84,9 +82,6 @@ services:
     container_name: ecommerce_api
     env_file:
       - .env
-    environment:
-      - DATABASE_URL=${DB_DATABASE_URL}
-      - ELASTICSEARCH_URL=${ELASTICSEARCH_URL}
     ports:
       - "8100:8000"
     depends_on:
