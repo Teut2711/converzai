@@ -4,6 +4,8 @@ from .image import ProductImage, ProductImage_Pydantic, ProductImage_Pydantic_Li
 from .review import Review, Review_Pydantic, Review_Pydantic_List
 from .meta import ProductMeta, ProductMeta_Pydantic, ProductMeta_Pydantic_List
 from .tag import Tag, Tag_Pydantic, Tag_Pydantic_List
+from .brand import Brand, Brand_Pydantic, Brand_Pydantic_List
+from .category import Category, Category_Pydantic, Category_Pydantic_List
 
 
 __all__ = [
@@ -32,4 +34,12 @@ __all__ = [
     "Tag",
     "Tag_Pydantic",
     "Tag_Pydantic_List",
+
+    "Brand",
+    "Brand_Pydantic",
+    "Brand_Pydantic_List",
+
+    "Category",
+    "Category_Pydantic",
+    "Category_Pydantic_List",
 ]

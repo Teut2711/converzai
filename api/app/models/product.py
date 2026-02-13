@@ -8,6 +8,7 @@ if TYPE_CHECKING:
     from app.models.review import  Review
     from app.models.meta import ProductMeta
 
+    
 class Product(TimestampMixin):
     id = fields.IntField(pk=True)
 
@@ -32,9 +33,17 @@ class Product(TimestampMixin):
     return_policy = fields.CharField(max_length=100)
     minimum_order_quantity = fields.IntField()
 
-    category = fields.CharField(max_length=255)
+    category = fields.ForeignKeyField(
+        "models.Category",
+        related_name="products",
+        on_delete=fields.RESTRICT,
+    )
 
-    brand = fields.CharField(max_length=255)
+    brand = fields.ForeignKeyField(
+        "models.Brand",
+        related_name="products",
+        on_delete=fields.RESTRICT,
+    )
 
     tags = fields.ManyToManyField(
         "models.Tag",

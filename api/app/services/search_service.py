@@ -1,10 +1,10 @@
 """
 Search service for e-commerce API using Elasticsearch
+Handles product search, filtering, and suggestions
 """
 
-from typing import List, Optional, Dict, Any
-from app.models.product import Product, Product_Pydantic_List, ProductPydantic
-from app.schemas.product import ProductOut
+from typing import List, Dict, Any, Optional
+from app.models.product import ProductPydantic
 from app.utils import get_logger
 from app.database.search_engine import get_es
 

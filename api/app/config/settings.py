@@ -31,9 +31,9 @@ class Settings(BaseSettings):
     )
     LOG_LEVEL: str = Field(default="INFO", env="LOG_LEVEL")
 
-    INGESTION_WORKERS: int = Field(
-        default=8,
-        env="INGESTION_WORKERS"
+    PRODUCT_API_URL_LIMIT: int = Field(
+        default=100,
+        env="PRODUCT_API_URL_LIMIT"
     )
 
     @computed_field(return_type=Path)
