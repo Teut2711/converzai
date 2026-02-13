@@ -7,12 +7,11 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Dict, Any
 from contextlib import asynccontextmanager
-from app.database.search_engine import init_es, close_es
 from app.services import DataIngestionService
 from app.controllers.v1 import v1_router
 from app.utils import get_logger
-from app.connectors.db import init_db, close_db
-from app.settings import settings
+from app.connectors import init_db, close_db
+from app.connectors import init_es, close_es
   
 
  

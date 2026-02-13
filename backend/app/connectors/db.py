@@ -1,6 +1,6 @@
-
 from app.settings import settings
-from typing import Dict, Any
+from typing import Dict, Any, Optional
+from fastapi import FastAPI
 from tortoise.contrib.fastapi import RegisterTortoise
 
 TORTOISE_ORM: Dict[str, Any] = {
@@ -31,13 +31,13 @@ TORTOISE_ORM: Dict[str, Any] = {
 
 
 
-_instance = None 
-async def init_db(app):
+_instance: Optional[RegisterTortoise] = None 
+async def init_db(app: FastAPI) -> None:
     global _instance
     _instance = RegisterTortoise(app, config=TORTOISE_ORM)
     await _instance.init_orm()
 
-async def close_db():
+async def close_db() -> None:
     global _instance
     if _instance:
         await _instance.close_orm()
