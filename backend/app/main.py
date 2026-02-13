@@ -19,9 +19,13 @@ from app.settings import settings
 TORTOISE_ORM: Dict[str, Any] = {
     "connections": {
         "default": {
-            "engine": "tortoise.backends.mysql",
+            "engine": f"tortoise.backends.{settings.DB_DRIVER}",
             "credentials": {
-                "dsn": settings.DATABASE_URL,
+                "host": settings.DB_HOST,
+                "port": settings.DB_PORT,
+                "user": settings.DB_USER,
+                "password": settings.DB_PASSWORD,
+                "database": settings.DB_DATABASE,
                 "minsize": 5,
                 "maxsize": 20,
                 "connect_timeout": 10,

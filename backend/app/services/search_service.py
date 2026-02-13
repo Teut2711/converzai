@@ -14,7 +14,6 @@ logger = get_logger(__name__)
 
 
 class SearchService:
-    """Singleton service for Elasticsearch search operations"""
     
     _instance = None
     
@@ -22,19 +21,12 @@ class SearchService:
         if cls._instance is None:
             cls._instance = super(SearchService, cls).__new__(cls)
             cls._instance.index_name = "products"
+            cls._es = get_es()
             logger.info(f"SearchService initialized with index: {cls._instance.index_name}")
         return cls._instance
     
-    @property
-    async def es(self):
-        """Get Elasticsearch client from search_engine module"""
-        return await get_es()
-    
     def _serialize_for_es(self, product_data: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Serialize product data for Elasticsearch indexing.
-        Handles datetime and Decimal conversions.
-        """
+
         serialized = {}
         
         for key, value in product_data.items():
@@ -61,7 +53,7 @@ class SearchService:
         try:
             logger.info(f"Searching products with query: '{query}', size: {size}, from: {from_}")
             
-            es_client = await self.es
+            es_client = self._es
             if es_client is None:
                 logger.error("Elasticsearch client not available")
                 return []
@@ -136,7 +128,7 @@ class SearchService:
         try:
             logger.info(f"Filtering products - category: {category}, brand: {brand}, price_range: {min_price}-{max_price}")
             
-            es_client = await self.es
+            es_client = self._es
             if es_client is None:
                 logger.error("Elasticsearch client not available")
                 return []
@@ -192,7 +184,7 @@ class SearchService:
         try:
             logger.info(f"Getting suggestions for query: '{query}'")
             
-            es_client = await self.es
+            es_client = self._es
             if es_client is None:
                 logger.error("Elasticsearch client not available")
                 return []
@@ -242,7 +234,7 @@ class SearchService:
         try:
             logger.info(f"Indexing product: {product_pydantic.id} - {product_pydantic.title}")
             
-            es_client = await self.es
+            es_client = await self._es
             if es_client is None:
                 logger.error("Elasticsearch client not available")
                 return False
@@ -287,7 +279,7 @@ class SearchService:
         try:
             logger.info(f"Deleting product from index: {product_id}")
             
-            es_client = await self.es
+            es_client = await self._es
             if es_client is None:
                 logger.error("Elasticsearch client not available")
                 return False
@@ -309,7 +301,7 @@ class SearchService:
     async def get_index_stats(self) -> Dict[str, Any]:
         """Get Elasticsearch index statistics"""
         try:
-            es_client = await self.es
+            es_client = await self._es
             if es_client is None:
                 logger.error("Elasticsearch client not available")
                 return {}

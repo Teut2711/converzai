@@ -12,7 +12,7 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    DB_ROOT_PASSWORD: str = Field(default="root_password", env="DB_ROOT_PASSWORD")
+   
     DB_DRIVER: str = Field(default="mysql", env="DB_DRIVER")
     DB_DATABASE: str = Field(default="ecommerce", env="DB_DATABASE")
     DB_USER: str = Field(default="app_user", env="DB_USER")
@@ -21,22 +21,7 @@ class Settings(BaseSettings):
     DB_PORT: int = Field(default=3306, env="DB_PORT")
 
 
-    @property
-    def DATABASE_URL(self) -> str:
-        direct_url = os.getenv("DATABASE_URL")
-        if direct_url:
-            return direct_url
-        
-        if self.DB_DRIVER == "postgresql":
-            return f"postgresql://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_DATABASE}"
-        elif self.DB_DRIVER == "mysql":
-            return f"mysql://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_DATABASE}"
-        elif self.DB_DRIVER == "sqlite":
-            return f"sqlite:///{self.DB_DATABASE}.db"
-        else:
-            return f"mysql://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_DATABASE}"
 
- 
 
     ELASTICSEARCH_URL: str = Field(
         default="http://elasticsearch:9200",
@@ -70,3 +55,4 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+print(settings)

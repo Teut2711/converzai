@@ -19,11 +19,8 @@ async def init_es() -> None:
         return
 
     es = AsyncElasticsearch(
-        hosts=[settings.ELASTICSEARCH_URL],
-        timeout=30,
-        max_retries=3,
-        retry_on_timeout=True,
-    )
+        hosts=[settings.ELASTICSEARCH_URL]
+        )
 
     try:
         await es.ping()
