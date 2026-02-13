@@ -171,8 +171,8 @@ class IndexingService:
         logger.info("Starting full reindex of all products")
 
         # Fetch all products with related data
-        products = await ProductModel.all().prefetch_related("category", "brand", "tags")
-
+        products = await ProductModel.all()
+        
         indexed_count = 0
         for product in products:
             try:

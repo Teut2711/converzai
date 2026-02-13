@@ -42,6 +42,7 @@ app = FastAPI(
     description="Simple e-commerce REST API with MySQL and Elasticsearch",
     version="1.0.0",
     lifespan=lifespan,
+    
 )
 
 app.add_middleware(
