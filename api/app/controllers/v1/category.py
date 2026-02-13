@@ -7,7 +7,7 @@ from typing import List
 
 from pydantic import BaseModel
 from app.services.product_service import ProductService
-from app.config.settings import settings
+from app.settings import settings
 
 router = APIRouter(prefix="/categories", tags=["search"])
 

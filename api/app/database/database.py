@@ -4,7 +4,7 @@ Database configuration and connection management using Tortoise ORM
 
 from tortoise import Tortoise
 from typing import Dict, Any
-from app.config.settings import settings
+from app.settings import settings
 
 TORTOISE_ORM: Dict[str, Any] = {
     "connections": {

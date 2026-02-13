@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from app.database.database import init_db, close_db
 from app.database.search_engine import init_es, close_es
-from app.seed_data.load_from_api import load_seed_data
+from app.ingest_data import DataIngestionService
 from app.views.v1 import v1_router
 from app.utils import get_logger
 
@@ -16,16 +16,21 @@ logger = get_logger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Initialize database and Elasticsearch
     await init_db()
     await init_es()
     
+    # Load seed data using DataIngestionService
+    ingestion_service = DataIngestionService()
     try:
-        await load_seed_data()
+        await ingestion_service.load_seed_data()
     except Exception as e:
         logger.error(f"Error loading seed data: {e}")
     
     yield
     
+    # Cleanup
+    await ingestion_service.close()
     await close_db()
     await close_es()
 

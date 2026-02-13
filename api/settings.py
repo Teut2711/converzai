@@ -29,7 +29,7 @@ class Settings(BaseSettings):
         default="b64f8565b393f9101575ec971f0940345840a34d55304530ef7b568987d1f7f5",
            env="SECRET_KEY"
     )
-    LOG_LEVEL: str = Field(default="INFO", env="LOG_LEVEL")
+    LOG_LEVEL: str = Field(default="WARNING", env="LOG_LEVEL")
 
     PRODUCT_API_URL_LIMIT: int = Field(
         default=100,

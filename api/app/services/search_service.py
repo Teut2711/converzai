@@ -4,7 +4,9 @@ Handles product search, filtering, and suggestions
 """
 
 from typing import List, Dict, Any, Optional
-from app.models.product import ProductPydantic
+from datetime import datetime
+from decimal import Decimal
+from app.models.product import Product_Pydantic
 from app.utils import get_logger
 from app.database.search_engine import get_es
 
@@ -28,6 +30,32 @@ class SearchService:
         """Get Elasticsearch client from search_engine module"""
         return await get_es()
     
+    def _serialize_for_es(self, product_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Serialize product data for Elasticsearch indexing.
+        Handles datetime and Decimal conversions.
+        """
+        serialized = {}
+        
+        for key, value in product_data.items():
+            if value is None:
+                continue
+            elif isinstance(value, datetime):
+                serialized[key] = value.isoformat()
+            elif isinstance(value, Decimal):
+                serialized[key] = float(value)
+            elif isinstance(value, dict):
+                serialized[key] = self._serialize_for_es(value)
+            elif isinstance(value, list):
+                serialized[key] = [
+                    self._serialize_for_es(item) if isinstance(item, dict) else item
+                    for item in value
+                ]
+            else:
+                serialized[key] = value
+        
+        return serialized
+    
     async def search_products(self, query: str, size: int = 20, from_: int = 0) -> List[Dict[str, Any]]:
         """Search products using Elasticsearch"""
         try:
@@ -47,7 +75,7 @@ class SearchService:
                             "title^3",        # Boost title matches
                             "brand^2",        # Boost brand matches
                             "description",    # Description matches
-                            "categories^2"    # Boost category matches
+                            "category^2"      # Boost category matches
                         ],
                         "type": "best_fields",
                         "fuzziness": "AUTO"
@@ -117,7 +145,7 @@ class SearchService:
             filters = []
             
             if category:
-                filters.append({"term": {"categories.keyword": category}})
+                filters.append({"term": {"category.keyword": category}})
             
             if brand:
                 filters.append({"term": {"brand.keyword": brand}})
@@ -128,7 +156,7 @@ class SearchService:
                     price_range["gte"] = min_price
                 if max_price is not None:
                     price_range["lte"] = max_price
-                filters.append({"range": {"final_price": price_range}})
+                filters.append({"range": {"price": price_range}})
             
             # Build search body
             search_body = {
@@ -175,7 +203,8 @@ class SearchService:
                         "prefix": query,
                         "completion": {
                             "field": "title_suggest",
-                            "size": size
+                            "size": size,
+                            "skip_duplicates": True
                         }
                     }
                 }
@@ -200,49 +229,61 @@ class SearchService:
             logger.error(f"Suggestion error: {e}")
             return []
     
-    async def index_product(self, product: Product) -> bool:
-        """Index a single product"""
+    async def index_product(self, product_pydantic: Product_Pydantic) -> bool:
+        """
+        Index a single product to Elasticsearch.
+        
+        Args:
+            product_pydantic: Product_Pydantic model (already converted from ORM)
+        
+        Returns:
+            bool: True if indexing successful, False otherwise
+        """
         try:
-            logger.info(f"Indexing product: {product.id} - {product.title}")
+            logger.info(f"Indexing product: {product_pydantic.id} - {product_pydantic.title}")
             
             es_client = await self.es
             if es_client is None:
                 logger.error("Elasticsearch client not available")
                 return False
             
-            
-            # Use Pydantic model for consistent serialization
-            product_pydantic = ProductPydantic.from_tortoise_orm(product)
+            # Convert Pydantic model to dict
             product_doc = product_pydantic.model_dump(exclude_none=True)
             
-            # Convert datetime to ISO format for Elasticsearch
-            if 'created_at' in product_doc:
-                product_doc['created_at'] = product_doc['created_at'].isoformat()
-            if 'updated_at' in product_doc:
-                product_doc['updated_at'] = product_doc['updated_at'].isoformat()
+            # Serialize for Elasticsearch (handle datetime and Decimal)
+            product_doc = self._serialize_for_es(product_doc)
             
-            # Add categories as array for better search
-            if product.category:
-                product_doc['categories'] = [product.category.name]
-            else:
-                product_doc['categories'] = []
+            # Extract category name if available
+            if 'category' in product_doc and isinstance(product_doc['category'], dict):
+                product_doc['category'] = product_doc['category'].get('name', '')
             
+            # Extract brand name if available
+            if 'brand' in product_doc and isinstance(product_doc['brand'], dict):
+                product_doc['brand'] = product_doc['brand'].get('name', '')
+            
+            # Add title suggestion for autocomplete
+            product_doc['title_suggest'] = {
+                "input": [product_pydantic.title],
+                "weight": int(product_pydantic.rating * 10) if product_pydantic.rating else 50
+            }
+            
+            # Index the document
             response = await es_client.index(
                 index=self.index_name,
-                id=product.id,
+                id=product_pydantic.id,
                 body=product_doc
             )
             
-            result = response.get("result") == "created" or response.get("result") == "updated"
+            result = response.get("result") in ["created", "updated"]
             logger.info(f"Product indexing result: {response.get('result')}")
             return result
             
         except Exception as e:
-            logger.error(f"Indexing error: {e}")
+            logger.error(f"Indexing error for product {product_pydantic.id}: {e}")
             return False
     
     async def delete_product_index(self, product_id: int) -> bool:
-        """Delete product from index"""
+        """Delete product from Elasticsearch index"""
         try:
             logger.info(f"Deleting product from index: {product_id}")
             
@@ -253,12 +294,39 @@ class SearchService:
             
             response = await es_client.delete(
                 index=self.index_name,
-                id=product_id
+                id=product_id,
+                ignore=[404]  # Ignore if document doesn't exist
             )
             
             result = response.get("result") == "deleted"
             logger.info(f"Product deletion result: {response.get('result')}")
             return result
+            
         except Exception as e:
-            logger.error(f"Delete index error: {e}")
+            logger.error(f"Delete index error for product {product_id}: {e}")
             return False
+    
+    async def get_index_stats(self) -> Dict[str, Any]:
+        """Get Elasticsearch index statistics"""
+        try:
+            es_client = await self.es
+            if es_client is None:
+                logger.error("Elasticsearch client not available")
+                return {}
+            
+            # Get index stats
+            stats = await es_client.indices.stats(index=self.index_name)
+            
+            if self.index_name in stats.get("indices", {}):
+                index_stats = stats["indices"][self.index_name]
+                return {
+                    "document_count": index_stats["total"]["docs"]["count"],
+                    "index_size_bytes": index_stats["total"]["store"]["size_in_bytes"],
+                    "index_name": self.index_name
+                }
+            
+            return {}
+            
+        except Exception as e:
+            logger.error(f"Error getting index stats: {e}")
+            return {}

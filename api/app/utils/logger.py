@@ -3,7 +3,7 @@ import sys
 from pathlib import Path
 from typing import Optional
 
-from app.config.settings import settings
+from app.settings import settings
 
 
 def get_logger(
@@ -11,20 +11,9 @@ def get_logger(
     level: Optional[int] = None,
     log_file: str = "ecommerce_api.log",
 ):
-    """
-    Create and configure a logger with file and console handlers.
-    
-    Args:
-        name: Logger name (usually __name__)
-        level: Logging level (defaults to settings.log_level)
-        log_file: Log file name
-        
-    Returns:
-        Configured logger instance
-    """
-    # Convert string level to logging level if not provided
+ 
     if level is None:
-        level = getattr(logging, settings.log_level.upper(), logging.INFO)
+        level = getattr(logging, settings.LOG_LEVEL, logging.INFO)
     
     logger = logging.getLogger(name)
     logger.setLevel(level)

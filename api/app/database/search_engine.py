@@ -7,7 +7,7 @@ from typing import Optional
 from elasticsearch import AsyncElasticsearch
 from elasticsearch.exceptions import ConnectionError, TransportError
 
-from app.config.settings import settings
+from app.settings import settings
 
 _es_client: Optional[AsyncElasticsearch] = None
 

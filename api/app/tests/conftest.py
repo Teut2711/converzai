@@ -65,7 +65,6 @@ async def sample_category():
 @pytest.fixture
 async def sample_product(sample_category):
     """Create a sample product for testing"""
-    from app.models.product import Product
     
     product = await Product.create(
         title="Test Smartphone",
