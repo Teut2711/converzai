@@ -2,7 +2,6 @@ from typing import List, Optional
 from app.models.product import Product, Product_Pydantic, Product_Pydantic_List
 from app.utils import get_logger
 from pydantic import BaseModel
-
 from app.models import Category
 
 
@@ -29,7 +28,7 @@ class ProductService:
             logger.info("ProductService singleton initialized")
 
     async def get_all_categories(self) -> List[str]:
-        categories = await Category.all().values("name", flat=True)
+        categories = await Category.all().values_list("name", flat=True)
         return categories
 
     async def get_all_products(
