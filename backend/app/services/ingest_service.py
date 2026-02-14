@@ -159,6 +159,9 @@ class DataIngestionService:
         
         for product in products:
             try:
+                # Prefetch related data for computed fields
+                await product.fetch_related("category", "brand", "tags", "dimensions", "images", "reviews", "meta")
+                
                 product_pydantic = await Product_Pydantic.from_tortoise_orm(product)
                 pydantic_products.append(product_pydantic)
             except Exception as e:

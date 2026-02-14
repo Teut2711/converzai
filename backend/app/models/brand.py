@@ -3,7 +3,7 @@ from  tortoise.contrib.pydantic import pydantic_queryset_creator, pydantic_model
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from app.models.product import Product
+    from .product import Product
 
 
 class Brand(models.Model):

@@ -1,5 +1,7 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional, Dict, List, Any
+from decimal import Decimal
 from tortoise import fields
+from tortoise.exceptions import NoValuesFetched
 from app.models.base import TimestampMixin
 from tortoise.contrib.pydantic import pydantic_queryset_creator, pydantic_model_creator
 if TYPE_CHECKING:
@@ -56,7 +58,75 @@ class Product(TimestampMixin):
     reviews: fields.ReverseRelation["Review"]
     meta: fields.ReverseRelation["ProductMeta"]
 
+    def category_name(self) -> str:
+        try:
+            return self.category.name if self.category else ""
+        except (NoValuesFetched, AttributeError):
+            return ""
+
+    def brand_name(self) -> str:
+        try:
+            return self.brand.name if self.brand else ""
+        except (NoValuesFetched, AttributeError):
+            return ""
+
+    def tag_names(self) -> List[str]:
+        try:
+            return [tag.name for tag in self.tags] if self.tags else []
+        except (NoValuesFetched, AttributeError):
+            return []
+
+    def dimensions_data(self) -> Optional[Dict[str, float]]:
+        try:
+            if self.dimensions:
+                return {
+                    "width": self.dimensions.width,
+                    "height": self.dimensions.height,
+                    "depth": self.dimensions.depth,
+                }
+            return None
+        except (NoValuesFetched, AttributeError):
+            return None
+
+    def image_urls(self) -> List[str]:
+        try:
+            return [img.image_url for img in self.images] if self.images else []
+        except (NoValuesFetched, AttributeError):
+            return []
+
+    def reviews_data(self) -> List[Dict[str, Any]]:
+        try:
+            if self.reviews:
+                return [
+                    {
+                        "rating": r.rating,
+                        "comment": r.comment,
+                        "reviewer_name": r.reviewer_name,
+                        "reviewer_email": r.reviewer_email,
+                        "review_date": r.review_date.isoformat() if r.review_date else None,
+                    }
+                    for r in self.reviews
+                ]
+            return []
+        except (NoValuesFetched, AttributeError):
+            return []
+
+    def meta_data(self) -> Optional[Dict[str, str]]:
+        try:
+            if self.meta:
+                return {
+                    "barcode": self.meta.barcode,
+                    "qr_code_url": self.meta.qr_code_url,
+                }
+            return None
+        except (NoValuesFetched, AttributeError):
+            return None
+
+    class PydanticMeta:
+        computed = ("category_name", "brand_name", "tag_names", "dimensions_data", "image_urls", "reviews_data", "meta_data")
+
 
 
 Product_Pydantic_List = pydantic_queryset_creator(Product)
 Product_Pydantic = pydantic_model_creator(Product)
+
