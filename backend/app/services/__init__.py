@@ -2,14 +2,17 @@
 Services package for e-commerce API
 """
 
-from .product_service import ProductService
 from .search_service import SearchService
 from .ingest_service import DataIngestionService
 from .indexing_service import IndexingService
+from .data_fetching_service import DataFetchService
+from .db_service import DatabaseService
+
 
 __all__ = [
-    "ProductService", 
     "SearchService",
     "DataIngestionService",
-    "IndexingService"
+    "IndexingService",
+    "DataFetchService",
+    "DatabaseService"
 ]

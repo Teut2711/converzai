@@ -5,7 +5,6 @@ FastAPI application with MySQL and Elasticsearch integration using Tortoise ORM
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from typing import Dict, Any
 from contextlib import asynccontextmanager
 from app.services import DataIngestionService
 from app.controllers.v1 import v1_router
@@ -26,10 +25,11 @@ async def lifespan(app: FastAPI):
     # Load seed data using DataIngestionService
     ingestion_service = DataIngestionService()
     try:
+        logger.info("Loading seed data...")
         await ingestion_service.load_seed_data()
+        logger.info("Seed data loaded successfully")    
     except Exception as e:
-        logger.error(f"Error loading seed data: {e}")
-    
+        logger.error(f"Error loading seed data: {e}")    
     yield
     
     # Cleanup

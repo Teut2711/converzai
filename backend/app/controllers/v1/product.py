@@ -3,9 +3,9 @@ Product views for e-commerce API v1
 """
 
 from fastapi import APIRouter, HTTPException, Depends, Query
-from typing import List,Optional
+from typing import Optional
 from pydantic import BaseModel, Field
-from app.services import ProductService
+from app.services import DatabaseService
 from app.services import SearchService
 from app.models import Product_Pydantic_List,Product_Pydantic
 
@@ -20,7 +20,7 @@ class PaginationQuery(BaseModel):
 async def get_products(
     pagination: PaginationQuery = Depends(),
     category: Optional[str] = Query(None, description="Filter products by category name"),
-    service: ProductService = Depends(ProductService)
+    service: DatabaseService = Depends(DatabaseService)
 ):
     try:
         if category:
@@ -33,7 +33,7 @@ async def get_products(
 @router.get("/{product_id}", response_model=Product_Pydantic)
 async def get_product(
     product_id: int,
-    service: ProductService = Depends(ProductService)
+    service: DatabaseService = Depends(DatabaseService)
 ):
     try:
         product = await service.get_product_by_id(product_id)

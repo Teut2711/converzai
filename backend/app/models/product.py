@@ -1,15 +1,58 @@
 from typing import TYPE_CHECKING, Optional, Dict, List, Any
 from tortoise import fields
 from tortoise.exceptions import NoValuesFetched
-from app.models.base import TimestampMixin
 from tortoise.contrib.pydantic import pydantic_queryset_creator, pydantic_model_creator
+from pydantic import BaseModel, Field
+from app.models.base import TimestampMixin
+ 
 if TYPE_CHECKING:
     from app.models.dimensions import ProductDimensions
     from app.models.image import  ProductImage
     from app.models.review import  Review
     from app.models.meta import ProductMeta
 
-    
+class ProductDimensionsBase(BaseModel):
+    width: float
+    height: float
+    depth: float
+
+class ReviewBase(BaseModel):
+    rating: int
+    comment: str
+    date: str
+    reviewer_name: str = Field(alias="reviewerName")
+    reviewer_email: str = Field(alias="reviewerEmail")
+
+class ProductMetaBase(BaseModel):
+    created_at: str = Field(alias="createdAt")
+    updated_at: str = Field(alias="updatedAt")
+    barcode: str
+    qr_code: str = Field(alias="qrCode")
+
+class ProductCreate(BaseModel):
+    id: Optional[int] = None
+    title: str
+    description: str
+    category: str
+    price: float
+    discount_percentage: Optional[float] = Field(default=None, alias="discountPercentage")
+    rating: float
+    stock: int
+    tags: List[str]
+    brand: Optional[str] = None
+    sku: str
+    weight: int
+    dimensions: ProductDimensionsBase
+    warranty_information: str = Field(alias="warrantyInformation")
+    shipping_information: str = Field(alias="shippingInformation")
+    availability_status: str = Field(alias="availabilityStatus")
+    reviews: List[ReviewBase]
+    return_policy: str = Field(alias="returnPolicy")
+    minimum_order_quantity: int = Field(alias="minimumOrderQuantity")
+    meta: ProductMetaBase
+    images: List[str]
+    thumbnail: str
+
 class Product(TimestampMixin):
     id = fields.IntField(pk=True)
 
