@@ -1,7 +1,8 @@
 from typing import TYPE_CHECKING, Optional, List
 from tortoise import fields
 from tortoise.contrib.pydantic import pydantic_queryset_creator, pydantic_model_creator
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, ConfigDict
+from pydantic.alias_generators import to_camel
 from app.models.base import TimestampMixin
  
 if TYPE_CHECKING:
@@ -18,14 +19,18 @@ class ProductReviewCreate(BaseModel):
     rating: int
     comment: str
     date: str
-    reviewer_name: str = Field(..., alias="reviewerName")
-    reviewer_email: str = Field(..., alias="reviewerEmail")
+    reviewer_name: str
+    reviewer_email: str
+    
+    model_config = ConfigDict(alias_generator=to_camel)
 
 class ProductMetaCreate(BaseModel):
-    created_at: str = Field(..., alias="createdAt")
-    updated_at: str = Field(..., alias="updatedAt")
+    created_at: str
+    updated_at: str
     barcode: Optional[str] = None
-    qr_code: Optional[str] = Field(..., alias="qrCode")
+    qr_code: Optional[str] = None
+    
+    model_config = ConfigDict(alias_generator=to_camel)
 
 class ProductCreate(BaseModel):
     id: Optional[int] = None
@@ -33,7 +38,7 @@ class ProductCreate(BaseModel):
     description: str
     category: str
     price: float
-    discount_percentage: Optional[float] = Field(default=None, alias="discountPercentage")
+    discount_percentage: Optional[float] = None
     rating: float
     stock: int
     tags: List[str]
@@ -41,17 +46,17 @@ class ProductCreate(BaseModel):
     sku: str
     weight: int
     dimensions: ProductDimensionsCreate
-    warranty_information: str = Field(alias="warrantyInformation")
-    shipping_information: str = Field(alias="shippingInformation")
-    availability_status: str = Field(alias="availabilityStatus")
+    warranty_information: str
+    shipping_information: str
+    availability_status: str
     reviews: List[ProductReviewCreate]
-    return_policy: str = Field(alias="returnPolicy")
-    minimum_order_quantity: int = Field(alias="minimumOrderQuantity")
+    return_policy: str
+    minimum_order_quantity: int
     images: List[str]
     thumbnail: str
     meta: Optional[ProductMetaCreate] = None
     
-    model_config = ConfigDict(populate_by_name=True)
+    model_config = ConfigDict(alias_generator=to_camel)
 
 class Product(TimestampMixin):
     id = fields.IntField(pk=True)
