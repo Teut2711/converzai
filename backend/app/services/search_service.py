@@ -32,10 +32,10 @@ class SearchService:
         """Get the Elasticsearch index name"""
         return self.index_name
     
-    async def search_products(self, query: str, size: int = 20, from_: int = 0, regex_search: bool = False) -> List[Product_Pydantic]:
+    async def search_products(self, query: str, size: int = 20, regex_search: bool = False) -> List[Product_Pydantic]:
         """Search products using Elasticsearch and hydrate with database data"""
         try:
-            logger.info(f"Searching products with query: '{query}', size: {size}, from: {from_}, regex: {regex_search}")
+            logger.info(f"Searching products with query: '{query}', size: {size}, regex: {regex_search}")
             
             es_client = self._es
             if es_client is None:
@@ -96,7 +96,6 @@ class SearchService:
             # Add common search parameters
             search_body.update({
                 "size": size,
-                "from": from_,
                 "sort": [{"_score": {"order": "desc"}}]
             })
             
@@ -120,7 +119,7 @@ class SearchService:
             # Hydrate with full product data from database
             if product_ids:
                 products = await self.db_service.get_products_by_ids(product_ids)
-                logger.info(f"Hydrated {len(products)} products from database")
+                # logger.info(f"Hydrated {len(products)} products from database")
                 return products
             else:
                 return []
