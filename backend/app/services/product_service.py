@@ -2,7 +2,6 @@ from typing import List, Optional
 from app.models.product import Product, Product_Pydantic, Product_Pydantic_List
 from app.utils import get_logger
 from pydantic import BaseModel
-from app.models import Category
 
 
 def enable_tortoise_logging():
@@ -49,13 +48,13 @@ class ProductService:
             logger.info("ProductService singleton initialized")
 
     async def get_all_categories(self) -> List[str]:
-        categories = await Category.all().values_list("name", flat=True)
+        categories = await Product.all().values_list("category", flat=True)
         return categories
 
     async def get_all_products(
         self, pagination: Optional[Pagination]
     ) -> List[Product_Pydantic_List]:
-        query = Product.all().order_by("-created_at").prefetch_related("category", "brand", "tags", "dimensions", "images", "reviews", "meta")
+        query = Product.all().order_by("-created_at").prefetch_related("tags", "dimensions", "images", "reviews", "meta")
         
         
         query = query.offset(pagination.offset).limit(pagination.limit)
