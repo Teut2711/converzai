@@ -66,10 +66,10 @@ class DatabaseService:
             try:
                 async with in_transaction(connection_name="default"):
                     # Check if product already exists
-                    sku = product_data.sku
-                    existing_product = await Product.get_or_none(sku=sku)
+                    _id = product_data.id
+                    existing_product = await Product.get_or_none(id=_id)
                     if existing_product:
-                        logger.debug(f"Product with SKU {sku} already exists, skipping")
+                        logger.debug(f"Product with ID {_id} already exists, skipping")
                         continue
 
                     # Skip products without category
@@ -88,7 +88,6 @@ class DatabaseService:
                     await self._create_product_images(
                         product,
                         product_data.images,
-                        product_data.thumbnail,
                     )
                     await self._create_product_reviews(
                         product,
@@ -140,6 +139,7 @@ class DatabaseService:
             minimum_order_quantity=product_data.minimum_order_quantity,
             category=product_data.category,
             brand=product_data.brand,
+            thumbnail=product_data.thumbnail,
         )
 
     async def _add_tags_to_product(self, product: Product, tags: List[str]):
@@ -167,13 +167,13 @@ class DatabaseService:
         """Create product images"""
         for image_url in images:
             await ProductImage.create(
-                image_url=image_url, is_thumbnail=False, product=product
+                image_url=image_url, product=product
             )
 
         # Handle thumbnail
         if thumbnail:
             await ProductImage.create(
-                image_url=thumbnail, is_thumbnail=True, product=product
+                image_url=thumbnail,  product=product
             )
 
     async def _create_product_reviews(

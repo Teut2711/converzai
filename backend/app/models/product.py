@@ -80,6 +80,7 @@ class Product(Model):
 
     category = fields.CharField(max_length=100)
     brand = fields.CharField(max_length=100, null=True)
+    thumbnail= fields.CharField(max_length=255, null=True)
 
     tags = fields.ManyToManyField(
         "models.Tag",
