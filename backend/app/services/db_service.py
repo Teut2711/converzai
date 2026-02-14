@@ -240,7 +240,6 @@ class DatabaseService:
             logger.info("Fetching all products without pagination")
 
         product_pydantics = await Product_Pydantic_List.from_queryset(query)
-        logger.info(f"Retrieved {len(product_pydantics)} products")
         return product_pydantics
 
     async def get_products_by_category(
@@ -274,18 +273,12 @@ class DatabaseService:
         return product_pydantics
     
     async def get_product_by_id(self, product_id: int) -> Optional[Product_Pydantic]:
-        """
-        Get a single product by ID.
-        
-        Args:
-            product_id: ID of the product to retrieve
-            
-        Returns:
-            Product_Pydantic instance if found, None otherwise
-        """
+   
         product = await Product.get_or_none(id=product_id).prefetch_related(
             "tags", "dimensions", "images", "reviews", "meta"
         )
+        print(product.tags)
+        
         
         if not product:
             logger.warning(f"Product not found: {product_id}")
@@ -313,37 +306,3 @@ class DatabaseService:
             logger.info(f"Total product count: {count}")
         
         return count
-
-    # ============================================================================
-    # HELPER METHODS - For Indexing and Relations
-    # ============================================================================
-
-    async def get_product_with_relations(self, product_id: int) -> Product:
-        """
-        Get a product with all its related data prefetched.
-        
-        Args:
-            product_id: ID of the product
-            
-        Returns:
-            Product instance with related data loaded
-        """
-        return await Product.get(id=product_id).prefetch_related(
-            "tags", "dimensions", "images", "reviews", "meta"
-        )
-
-    async def get_products_with_relations(
-        self, product_ids: List[int]
-    ) -> List[Product]:
-        """
-        Get multiple products with all related data prefetched.
-        
-        Args:
-            product_ids: List of product IDs
-            
-        Returns:
-            List of Product instances with related data loaded
-        """
-        return await Product.filter(id__in=product_ids).prefetch_related(
-            "tags", "dimensions", "images", "reviews", "meta"
-        )

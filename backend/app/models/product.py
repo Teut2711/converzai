@@ -4,6 +4,7 @@ from tortoise.exceptions import NoValuesFetched
 from tortoise.contrib.pydantic import pydantic_queryset_creator, pydantic_model_creator
 from pydantic import BaseModel, Field
 from app.models.base import TimestampMixin
+from tortoise.models import Model
  
 if TYPE_CHECKING:
     from app.models.dimensions import ProductDimensions
@@ -53,7 +54,7 @@ class ProductCreate(BaseModel):
     images: List[str]
     thumbnail: str
 
-class Product(TimestampMixin):
+class Product(Model):
     id = fields.IntField(pk=True)
 
     title = fields.CharField(max_length=255)

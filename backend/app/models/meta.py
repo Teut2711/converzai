@@ -1,7 +1,8 @@
-from tortoise import fields, models
+from tortoise import fields
 from tortoise.contrib.pydantic import pydantic_queryset_creator, pydantic_model_creator
+from app.models.base import TimestampMixin
 
-class ProductMeta(models.Model):
+class ProductMeta(TimestampMixin):
     id = fields.IntField(pk=True)
 
     barcode = fields.CharField(max_length=50, unique=True)
