@@ -8,11 +8,9 @@ from app.models import (
     ProductDimensions,
     ProductImage,
     Review,
-    ProductMeta,
     ProductCreate,
     ProductDimensionsBase,
     ReviewBase,
-    ProductMetaBase,
 )
 from app.models import Product_Pydantic, Product_Pydantic_List
 from app.utils import get_logger
@@ -93,9 +91,6 @@ class DatabaseService:
                         product,
                         product_data.reviews,
                     )
-                    await self._create_product_meta(
-                        product, product_data.meta
-                    )
 
                 # Transaction successful - add to saved products
                 saved_products.append(product)
@@ -116,7 +111,7 @@ class DatabaseService:
         if saved_products:
             product_ids = [p.id for p in saved_products]
             saved_products = await Product.filter(id__in=product_ids).prefetch_related(
-                "tags", "dimensions", "images", "reviews", "meta"
+                "tags", "dimensions", "images", "reviews"
             )
 
         return saved_products
@@ -140,6 +135,8 @@ class DatabaseService:
             category=product_data.category,
             brand=product_data.brand,
             thumbnail=product_data.thumbnail,
+            barcode=product_data.barcode,
+            qr_code=product_data.qr_code,
         )
 
     async def _add_tags_to_product(self, product: Product, tags: List[str]):
@@ -184,15 +181,6 @@ class DatabaseService:
                 product=product,
             )
 
-    async def _create_product_meta(self, product: Product, meta: ProductMetaBase):
-        """Create product metadata"""
-        
-        await ProductMeta.create(
-            barcode=meta.barcode,
-            qr_code_url=meta.qr_code_url,
-            product=product,
-        )
-        return product
     # ============================================================================
     # READ OPERATIONS - Product Queries
     # ============================================================================
@@ -221,7 +209,7 @@ class DatabaseService:
             List of Product_Pydantic_List instances
         """
         query = Product.all().order_by("-created_at").prefetch_related(
-            "tags", "dimensions", "images", "reviews", "meta"
+            "tags", "dimensions", "images", "reviews"
         )
         
         if pagination:
@@ -250,7 +238,7 @@ class DatabaseService:
             List of Product_Pydantic_List instances in the category
         """
         query = Product.filter(category=category).order_by("-created_at").prefetch_related(
-            "tags", "dimensions", "images", "reviews", "meta"
+            "tags", "dimensions", "images", "reviews"
         )
         
         if pagination:
@@ -269,10 +257,8 @@ class DatabaseService:
     async def get_product_by_id(self, product_id: int) -> Optional[Product_Pydantic]:
    
         product = await Product.get_or_none(id=product_id).prefetch_related(
-            "tags", "dimensions", "images", "reviews", "meta"
+            "tags", "dimensions", "images", "reviews"
         )
-        print(product.tags)
-        
         
         if not product:
             logger.warning(f"Product not found: {product_id}")

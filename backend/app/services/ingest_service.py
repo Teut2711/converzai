@@ -36,6 +36,12 @@ class DataIngestionService:
         # Step 2: Validate and parse data
         validated_products = []
         for product_dict in products_data:
+            # Flatten meta data if present
+            if 'meta' in product_dict:
+                meta = product_dict.pop('meta')
+                product_dict['barcode'] = meta.get('barcode')
+                product_dict['qrCode'] = meta.get('qrCode')
+            
             try:
                 product_create = ProductCreate(**product_dict)
                 validated_products.append(product_create)

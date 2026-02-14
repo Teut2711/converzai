@@ -5,7 +5,6 @@ from .product import (
     ProductCreate,
     ProductDimensionsBase,
     ReviewBase,
-    ProductMetaBase,
 )
 from .dimensions import (
     ProductDimensions,
@@ -14,14 +13,12 @@ from .dimensions import (
 )
 from .image import ProductImage, ProductImage_Pydantic, ProductImage_Pydantic_List
 from .review import Review, Review_Pydantic, Review_Pydantic_List
-from .meta import ProductMeta, ProductMeta_Pydantic, ProductMeta_Pydantic_List
 from .tag import Tag, Tag_Pydantic, Tag_Pydantic_List
 
 
 __all__ = [
     "Product",
     "ProductDimensionsBase",
-    "ProductMetaBase",
     "ReviewBase",
     "ProductCreate",
     "Product_Pydantic",
@@ -35,9 +32,6 @@ __all__ = [
     "Review",
     "Review_Pydantic",
     "Review_Pydantic_List",
-    "ProductMeta",
-    "ProductMeta_Pydantic",
-    "ProductMeta_Pydantic_List",
     "Tag",
     "Tag_Pydantic",
     "Tag_Pydantic_List",

@@ -1,16 +1,13 @@
-from typing import TYPE_CHECKING, Optional, Dict, List, Any
+from typing import TYPE_CHECKING, Optional, List
 from tortoise import fields
-from tortoise.exceptions import NoValuesFetched
 from tortoise.contrib.pydantic import pydantic_queryset_creator, pydantic_model_creator
 from pydantic import BaseModel, Field
 from app.models.base import TimestampMixin
-from tortoise.models import Model
  
 if TYPE_CHECKING:
     from app.models.dimensions import ProductDimensions
     from app.models.image import  ProductImage
     from app.models.review import  Review
-    from app.models.meta import ProductMeta
 
 class ProductDimensionsBase(BaseModel):
     width: float
@@ -23,12 +20,6 @@ class ReviewBase(BaseModel):
     date: str
     reviewer_name: str = Field(alias="reviewerName")
     reviewer_email: str = Field(alias="reviewerEmail")
-
-class ProductMetaBase(BaseModel):
-    created_at: str = Field(alias="createdAt")
-    updated_at: str = Field(alias="updatedAt")
-    barcode: str
-    qr_code_url: str = Field(alias="qrCode")
 
 class ProductCreate(BaseModel):
     id: Optional[int] = None
@@ -50,11 +41,12 @@ class ProductCreate(BaseModel):
     reviews: List[ReviewBase]
     return_policy: str = Field(alias="returnPolicy")
     minimum_order_quantity: int = Field(alias="minimumOrderQuantity")
-    meta: ProductMetaBase
+    barcode: Optional[str] = None
+    qr_code: Optional[str] = Field(alias="qrCode")
     images: List[str]
     thumbnail: str
 
-class Product(Model):
+class Product(TimestampMixin):
     id = fields.IntField(pk=True)
 
     title = fields.CharField(max_length=255)
@@ -82,6 +74,9 @@ class Product(Model):
     brand = fields.CharField(max_length=100, null=True)
     thumbnail= fields.CharField(max_length=255, null=True)
 
+    barcode = fields.CharField(max_length=50, unique=True, null=True)
+    qr_code = fields.CharField(max_length=500, null=True)
+
     tags = fields.ManyToManyField(
         "models.Tag",
         related_name="products",
@@ -91,7 +86,6 @@ class Product(Model):
     dimensions: fields.ReverseRelation["ProductDimensions"]
     images: fields.ReverseRelation["ProductImage"]
     reviews: fields.ReverseRelation["Review"]
-    meta: fields.ReverseRelation["ProductMeta"]
 
 Product_Pydantic_List = pydantic_queryset_creator(Product)
 Product_Pydantic = pydantic_model_creator(Product)
