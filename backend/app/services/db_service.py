@@ -136,8 +136,6 @@ class DatabaseService:
             category=product_data.category,
             brand=product_data.brand,
             thumbnail=product_data.thumbnail,
-            barcode=product_data.barcode,
-            qr_code=product_data.qr_code,
         )
 
     async def _add_tags_to_product(self, product: Product, tags: List[str]):
@@ -200,15 +198,7 @@ class DatabaseService:
     async def get_all_products(
         self, pagination: Optional[Pagination] = None
     ) -> List[Product_Pydantic_List]:
-        """
-        Get all products with optional pagination.
-        
-        Args:
-            pagination: Optional pagination parameters
-            
-        Returns:
-            List of Product_Pydantic_List instances
-        """
+       
         query = Product.all().order_by("-created_at").prefetch_related(
             "tags", "dimensions", "images", "reviews"
         )
