@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING, Optional, List
 from tortoise import fields
 from tortoise.contrib.pydantic import pydantic_queryset_creator, pydantic_model_creator
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from app.models.base import TimestampMixin
  
 if TYPE_CHECKING:
@@ -18,14 +18,14 @@ class ProductReviewCreate(BaseModel):
     rating: int
     comment: str
     date: str
-    reviewer_name: str = Field(alias="reviewerName")
-    reviewer_email: str = Field(alias="reviewerEmail")
+    reviewer_name: str = Field(..., alias="reviewerName")
+    reviewer_email: str = Field(..., alias="reviewerEmail")
 
 class ProductMetaCreate(BaseModel):
-    createdAt: str = Field(alias="createdAt")
-    updatedAt: str = Field(alias="updatedAt")
+    created_at: str = Field(..., alias="createdAt")
+    updated_at: str = Field(..., alias="updatedAt")
     barcode: Optional[str] = None
-    qr_code: Optional[str] = Field(alias="qrCode")
+    qr_code: Optional[str] = Field(..., alias="qrCode")
 
 class ProductCreate(BaseModel):
     id: Optional[int] = None
@@ -50,6 +50,8 @@ class ProductCreate(BaseModel):
     images: List[str]
     thumbnail: str
     meta: Optional[ProductMetaCreate] = None
+    
+    model_config = ConfigDict(populate_by_name=True)
 
 class Product(TimestampMixin):
     id = fields.IntField(pk=True)
