@@ -46,10 +46,9 @@ class SearchService:
             if regex_search:
                 search_body = {
                     "query": {
-                        "regexp": {
+                        "wildcard": {
                             "title": {
-                                "value": f".*{query}.*",
-                                "flags": "ALL"
+                                "value": f"*{query}*"
                             }
                         }
                     }
@@ -72,22 +71,7 @@ class SearchService:
                                         "fuzziness": "AUTO"
                                     }
                                 },
-                                {
-                                    "wildcard": {
-                                        "title": {
-                                            "value": f"*{query}*",
-                                            "boost": 1.0
-                                        }
-                                    }
-                                },
-                                {
-                                    "wildcard": {
-                                        "category": {
-                                            "value": f"*{query}*",
-                                            "boost": 2.0
-                                        }
-                                    }
-                                }
+                              
                             ]
                         }
                     }
