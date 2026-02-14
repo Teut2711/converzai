@@ -112,6 +112,14 @@ class DatabaseService:
                 # Automatic rollback happens here
 
         logger.info(f"Successfully saved {saved_count} products to database")
+
+        # Prefetch related data for the saved products
+        if saved_products:
+            product_ids = [p.id for p in saved_products]
+            saved_products = await Product.filter(id__in=product_ids).prefetch_related(
+                "tags", "dimensions", "images", "reviews", "meta"
+            )
+
         return saved_products
 
     async def _create_product(self, product_data: ProductCreate) -> Product:
@@ -184,12 +192,13 @@ class DatabaseService:
 
     async def _create_product_meta(self, product: Product, meta: ProductMetaBase):
         """Create product metadata"""
+        
         await ProductMeta.create(
             barcode=meta.barcode,
-            qr_code_url=meta.qr_code,
+            qr_code_url=meta.qr_code_url,
             product=product,
         )
-
+        return product
     # ============================================================================
     # READ OPERATIONS - Product Queries
     # ============================================================================
