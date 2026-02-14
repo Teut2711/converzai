@@ -91,6 +91,7 @@ class DatabaseService:
                         product,
                         product_data.reviews,
                     )
+         
 
                 # Transaction successful - add to saved products
                 saved_products.append(product)
@@ -136,6 +137,8 @@ class DatabaseService:
             category=product_data.category,
             brand=product_data.brand,
             thumbnail=product_data.thumbnail,
+            qr_code=product_data.meta.qr_code,
+            barcode=product_data.meta.barcode,
         )
 
     async def _add_tags_to_product(self, product: Product, tags: List[str]):

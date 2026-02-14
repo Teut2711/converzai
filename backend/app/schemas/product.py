@@ -27,7 +27,6 @@ class ProductCreate(BaseModel):
     return_policy: str = Field(alias="returnPolicy")
     minimum_order_quantity: int = Field(alias="minimumOrderQuantity")
     barcode: Optional[str] = None
-    qr_code: Optional[str] = Field(alias="qrCode")
     images: List[str]
     thumbnail: str
 

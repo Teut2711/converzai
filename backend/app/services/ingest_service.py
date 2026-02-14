@@ -26,23 +26,20 @@ class DataIngestionService:
         """
         logger.info("Starting seed data loading process...")
 
-        products_data = await self.fetch_service.fetch_all_products()
-        
-        if not products_data:
+        products_create = await self.fetch_service.fetch_all_products()
+        if not products_create:
             logger.warning("No products fetched from API, aborting seed data load")
             return
 
         validated_products = []
-        for product_dict in products_data:
-            if 'meta' in product_dict:
-                meta = product_dict.pop('meta')
-                product_dict['barcode'] = meta.get('barcode')
-                product_dict['qrCode'] = meta.get('qrCode')
+        for a_product in products_create:
+            if 'meta' in a_product:
+                meta = a_product.pop('meta')
+                a_product['barcode'] = meta.get('barcode')
+                a_product['qrCode'] = meta.get('qrCode')
             
             try:
-                product_create = ProductCreate(**product_dict)
-                print(product_create)
-                validated_products.append(product_create)
+                validated_products.append(a_product)
             except Exception as e:
                 logger.error(f"Invalid product data: {e}, skipping")
                 continue

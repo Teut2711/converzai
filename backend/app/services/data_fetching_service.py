@@ -2,6 +2,8 @@ import httpx
 from typing import List, Dict, Any
 from app.settings import settings
 from app.utils import get_logger
+from app.models import ProductCreate
+
 
 logger = get_logger(__name__)
 
@@ -14,7 +16,7 @@ class DataFetchService:
         self.client = httpx.AsyncClient(timeout=30.0)
         logger.info(f"DataFetchService initialized with URL: {self.products_url}")
 
-    async def fetch_all_products(self) -> List[Dict[str, Any]]:
+    async def fetch_all_products(self) -> List[ProductCreate]:
    
         logger.info("Starting product fetch from API...")
 
@@ -40,20 +42,41 @@ class DataFetchService:
         all_products = data.get("products", [])
         logger.info(f"Successfully fetched {len(all_products)} products from API")
 
-        return all_products
+        # Convert to ProductCreate instances
+        product_creates = []
+        for product_dict in all_products:
+            try:
+                product_create = ProductCreate(**product_dict)
+                product_creates.append(product_create)
+            except Exception as e:
+                logger.error(f"Error creating ProductCreate: {e}")
+                continue
+        
+        return product_creates
 
     async def fetch_products_paginated(
-        self, limit: int = 100, skip: int = 0
-    ) -> Dict[str, Any]:
-        logger.info(f"Fetching products: limit={limit}, skip={skip}")
+        self, limit: int = 100, offset: int = 0
+    ) -> List[ProductCreate]:
+        logger.info(f"Fetching products: limit={limit}, skip={offset}")
         
-        params = {"limit": limit, "skip": skip}
+        params = {"limit": limit, "skip": offset}
         response = await self.client.get(self.products_url, params=params)
         response.raise_for_status()
         data = response.json()
+        all_products = data.get("products", [])
+        logger.info(f"Fetched {len(all_products)} products")
         
-        logger.info(f"Fetched {len(data.get('products', []))} products")
-        return data
+        # Convert to ProductCreate instances
+        product_creates = []
+        for product_dict in all_products:
+            try:
+                product_create = ProductCreate(**product_dict)
+                product_creates.append(product_create)
+            except Exception as e:
+                logger.error(f"Error creating ProductCreate: {e}")
+                continue
+        
+        return product_creates
 
     async def close(self):
         """Close HTTP client connections"""
