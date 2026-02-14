@@ -272,3 +272,34 @@ class DatabaseService:
             logger.info(f"Total product count: {count}")
         
         return count
+    
+    async def get_products_by_ids(
+        self, ids: List[int], pagination: Optional[Pagination] = None
+    ) -> List[Product_Pydantic_List]:
+        """
+        Get products filtered by category with optional pagination.
+        
+        Args:
+            category: Category name to filter by
+            pagination: Optional pagination parameters
+            
+        Returns:
+            List of Product_Pydantic_List instances in the category
+        """
+        query = Product.filter(id__in=ids).order_by("-created_at").prefetch_related(
+            "tags", "dimensions", "images", "reviews"
+        )
+        
+        if pagination:
+            query = query.offset(pagination.offset).limit(pagination.limit)
+            logger.info(
+                f"Fetching products with pagination: "
+                f"offset={pagination.offset}, limit={pagination.limit}"
+            )
+        else:
+            logger.info("Fetching all products")
+
+        product_pydantics = await Product_Pydantic_List.from_queryset(query)
+        logger.info("Retrieved products")
+        return product_pydantics
+   
