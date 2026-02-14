@@ -68,8 +68,8 @@ class ProductService:
         """Get products filtered by category with pagination"""
         query = Product.filter(category=category).order_by("-created_at")
         
-        # if pagination:
-        #     query = query.offset(pagination.offset).limit(pagination.limit)
+        if pagination:
+            query = query.offset(pagination.offset).limit(pagination.limit)
 
         product_pydantics = await Product_Pydantic_List.from_queryset(query)
         
