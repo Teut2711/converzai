@@ -32,59 +32,73 @@ class SearchService:
         """Get the Elasticsearch index name"""
         return self.index_name
     
-    async def search_products(self, query: str, size: int = 20, from_: int = 0) -> List[Product_Pydantic]:
+    async def search_products(self, query: str, size: int = 20, from_: int = 0, regex_search: bool = False) -> List[Product_Pydantic]:
         """Search products using Elasticsearch and hydrate with database data"""
         try:
-            logger.info(f"Searching products with query: '{query}', size: {size}, from: {from_}")
+            logger.info(f"Searching products with query: '{query}', size: {size}, from: {from_}, regex: {regex_search}")
             
             es_client = self._es
             if es_client is None:
                 logger.error("Elasticsearch client not available")
                 return []
             
-            # Search query with multiple fields
-            search_body = {
-                "query": {
-                    "bool": {
-                        "should": [
-                            {
-                                "multi_match": {
-                                    "query": query,
-                                    "fields": [
-                                        "title^3",        # Boost title matches
-                                        "brand^2",        # Boost brand matches
-                                        "description",    # Description matches
-                                        "category^2"      # Boost category matches
-                                    ],
-                                    "type": "best_fields",
-                                    "fuzziness": "AUTO"
-                                }
-                            },
-                            {
-                                "wildcard": {
-                                    "title": {
-                                        "value": f"*{query}*",
-                                        "boost": 1.0
-                                    }
-                                }
-                            },
-                            {
-                                "wildcard": {
-                                    "category": {
-                                        "value": f"*{query}*",
-                                        "boost": 2.0
-                                    }
-                                }
+            # Build query based on search type
+            if regex_search:
+                search_body = {
+                    "query": {
+                        "regexp": {
+                            "title": {
+                                "value": f".*{query}.*",
+                                "flags": "ALL"
                             }
-                        ]
+                        }
                     }
-                },
+                }
+            else:
+                search_body = {
+                    "query": {
+                        "bool": {
+                            "should": [
+                                {
+                                    "multi_match": {
+                                        "query": query,
+                                        "fields": [
+                                            "title^3",        # Boost title matches
+                                            "brand^2",        # Boost brand matches
+                                            "description",    # Description matches
+                                            "category^2"      # Boost category matches
+                                        ],
+                                        "type": "best_fields",
+                                        "fuzziness": "AUTO"
+                                    }
+                                },
+                                {
+                                    "wildcard": {
+                                        "title": {
+                                            "value": f"*{query}*",
+                                            "boost": 1.0
+                                        }
+                                    }
+                                },
+                                {
+                                    "wildcard": {
+                                        "category": {
+                                            "value": f"*{query}*",
+                                            "boost": 2.0
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            
+            # Add common search parameters
+            search_body.update({
                 "size": size,
                 "from": from_,
-                "sort": [
-                    {"_score": {"order": "desc"}}
-                ]
-            }
+                "sort": [{"_score": {"order": "desc"}}]
+            })
             
             # Execute search
             response = await es_client.search(
