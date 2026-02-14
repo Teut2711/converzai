@@ -33,11 +33,6 @@ class DataIngestionService:
 
         validated_products = []
         for a_product in products_create:
-            if 'meta' in a_product:
-                meta = a_product.pop('meta')
-                a_product['barcode'] = meta.get('barcode')
-                a_product['qrCode'] = meta.get('qrCode')
-            
             try:
                 validated_products.append(a_product)
             except Exception as e:

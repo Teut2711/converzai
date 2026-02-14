@@ -25,7 +25,7 @@ class ProductMetaCreate(BaseModel):
     createdAt: str = Field(alias="createdAt")
     updatedAt: str = Field(alias="updatedAt")
     barcode: Optional[str] = None
-    qrCode: Optional[str] = Field(alias="qrCode")
+    qr_code: Optional[str] = Field(alias="qrCode")
 
 class ProductCreate(BaseModel):
     id: Optional[int] = None

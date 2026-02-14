@@ -46,15 +46,7 @@ class DatabaseService:
             logger.info("DatabaseService singleton initialized")
 
     async def save_products(self, products_data: List[ProductCreate]) -> List[Product]:
-        """
-        Save products to database from raw API data.
-        
-        Args:
-            products_data: List of product dictionaries from API
-            
-        Returns:
-            List of successfully saved Product instances
-        """
+   
         logger.info(f"Saving {len(products_data)} products to database...")
 
         saved_count = 0
