@@ -26,17 +26,14 @@ class DataIngestionService:
         """
         logger.info("Starting seed data loading process...")
 
-        # Step 1: Fetch data from API
         products_data = await self.fetch_service.fetch_all_products()
         
         if not products_data:
             logger.warning("No products fetched from API, aborting seed data load")
             return
 
-        # Step 2: Validate and parse data
         validated_products = []
         for product_dict in products_data:
-            # Flatten meta data if present
             if 'meta' in product_dict:
                 meta = product_dict.pop('meta')
                 product_dict['barcode'] = meta.get('barcode')
@@ -44,6 +41,7 @@ class DataIngestionService:
             
             try:
                 product_create = ProductCreate(**product_dict)
+                print(product_create)
                 validated_products.append(product_create)
             except Exception as e:
                 logger.error(f"Invalid product data: {e}, skipping")
@@ -53,14 +51,12 @@ class DataIngestionService:
             logger.warning("No valid products after validation, aborting seed data load")
             return
 
-        # Step 3: Save to database and index to Elasticsearch in parallel
         saved_products = await self.db_service.save_products(validated_products)
         
         if not saved_products:
             logger.warning("No products were saved to database")
             return
 
-        # Step 4: Index the original API data directly to Elasticsearch
         await self._index_api_data(validated_products)
 
         logger.info("Seed data loading completed successfully")
@@ -79,9 +75,8 @@ class DataIngestionService:
         logger.info(f"Indexing {len(products)} products to Elasticsearch from API data...")
         
         # Convert ProductCreate objects to dictionaries for indexing
-        products_data = [product.dict() for product in products]
+        products_data = [product.model_dump() for product in products]
         
-        # Bulk index to Elasticsearch
         indexed_count = await self.indexing_service.bulk_index_product_data(
             products_data
         )

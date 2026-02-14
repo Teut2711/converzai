@@ -32,6 +32,14 @@ async def get_products(
         return await service.get_all_products(pagination)
 
 
+
+@router.get("/search", response_model=Product_Pydantic_List)
+async def search_products(
+    query: str = Query(..., description="Search query"),
+    service: SearchService = Depends(SearchService),
+):
+    return await service.search_products(query)
+
 @router.get("/{product_id}", response_model=Product_Pydantic)
 async def get_product(
     product_id: int, service: DatabaseService = Depends(DatabaseService)
@@ -40,11 +48,3 @@ async def get_product(
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
     return product
-
-
-@router.get("/search", response_model=Product_Pydantic_List)
-async def search_products(
-    query: str = Query(..., description="Search query"),
-    service: SearchService = Depends(SearchService),
-):
-    return await service.search_products(query)

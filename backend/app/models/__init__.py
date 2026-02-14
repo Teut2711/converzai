@@ -3,8 +3,8 @@ from .product import (
     Product_Pydantic,
     Product_Pydantic_List,
     ProductCreate,
-    ProductDimensionsBase,
-    ReviewBase,
+    ProductDimensionsCreate,
+    ProductReviewCreate,
 )
 from .dimensions import (
     ProductDimensions,
@@ -18,8 +18,8 @@ from .tag import Tag, Tag_Pydantic, Tag_Pydantic_List
 
 __all__ = [
     "Product",
-    "ProductDimensionsBase",
-    "ReviewBase",
+    "ProductDimensionsCreate",
+    "ProductReviewCreate",
     "ProductCreate",
     "Product_Pydantic",
     "Product_Pydantic_List",

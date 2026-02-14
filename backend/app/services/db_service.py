@@ -9,8 +9,8 @@ from app.models import (
     ProductImage,
     Review,
     ProductCreate,
-    ProductDimensionsBase,
-    ReviewBase,
+    ProductDimensionsCreate,
+    ProductReviewCreate,
 )
 from app.models import Product_Pydantic, Product_Pydantic_List
 from app.utils import get_logger
@@ -149,7 +149,7 @@ class DatabaseService:
             await product.tags.add(tag)
 
     async def _create_product_dimensions(
-        self, product: Product, dimensions: ProductDimensionsBase
+        self, product: Product, dimensions: ProductDimensionsCreate
     ):
         """Create product dimensions"""
         await ProductDimensions.create(
@@ -169,7 +169,7 @@ class DatabaseService:
             )
 
     async def _create_product_reviews(
-        self, product: Product, reviews: List[ReviewBase]
+        self, product: Product, reviews: List[ProductReviewCreate]
     ):
         """Create product reviews"""
         for review in reviews:

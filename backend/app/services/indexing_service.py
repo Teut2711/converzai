@@ -28,29 +28,7 @@ class IndexingService:
             logger.info("IndexingService singleton initialized")
     
     
-    async def index_product(self, product: ProductModel) -> bool:
-        """
-        Index a single product to Elasticsearch.
-        Accepts Product ORM model and converts to Pydantic internally.
-        
-        Args:
-            product: Product ORM model (should have related data already fetched)
-        
-        Returns:
-            bool: True if indexing successful, False otherwise
-        """
-        try:
-            logger.info(f"Indexing product: {product.id} - {product.title}")
-            
-            # Index in Elasticsearch
-            # For now, just return True since we're focusing on bulk indexing
-            logger.info(f"Would index product: {product.id}")
-            return True
-
-        except Exception as e:
-            logger.error(f"Error indexing product {product.id}: {e}")
-            return False
-
+ 
     async def bulk_index_products(self, products: List[ProductModel]) -> int:
         """
         Bulk index multiple products to Elasticsearch using async_bulk helper.
@@ -201,30 +179,4 @@ class IndexingService:
 
         logger.info(f"Reindexing completed: {indexed_count}/{len(products)} products")
         return indexed_count
-
-    async def reindex_product(self, product_id: int) -> bool:
-        """
-        Reindex a single product by ID.
-        
-        Args:
-            product_id: ID of the product to reindex
-        
-        Returns:
-            bool: True if reindexing successful, False otherwise
-        """
-        try:
-            product = await ProductModel.get_or_none(id=product_id).prefetch_related(
-                "tags", "dimensions", "images", "reviews"
-            )
-            
-            
-            if not product:
-                logger.warning(f"Product not found for reindexing: {product_id}")
-                return False
-            
-            # Index the product
-            return await self.index_product(product)
-            
-        except Exception as e:
-            logger.error(f"Error reindexing product {product_id}: {e}")
-            return False
+ 

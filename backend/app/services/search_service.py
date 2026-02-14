@@ -89,7 +89,7 @@ class SearchService:
                 "from": from_,
                 "sort": [
                     {"_score": {"order": "desc"}},
-                    {"created_at": {"order": "desc"}}
+                    # {"created_at": {"order": "desc"}}
                 ]
             }
             
@@ -164,7 +164,7 @@ class SearchService:
                 },
                 "size": size,
                 "from": from_,
-                "sort": [{"created_at": {"order": "desc"}}]
+                # "sort": [{"created_at": {"order": "desc"}}]
             }
             
             # Execute search

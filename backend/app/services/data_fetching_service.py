@@ -15,12 +15,7 @@ class DataFetchService:
         logger.info(f"DataFetchService initialized with URL: {self.products_url}")
 
     async def fetch_all_products(self) -> List[Dict[str, Any]]:
-        """
-        Fetch all products from the external API.
-        
-        Returns:
-            List of product dictionaries from the API
-        """
+   
         logger.info("Starting product fetch from API...")
 
         # Get first page to determine total
@@ -37,7 +32,6 @@ class DataFetchService:
         total_products = first_data.get("total", len(first_data["products"]))
         logger.info(f"Total products to fetch: {total_products}")
 
-        # Fetch all products in one call
         params = {"limit": total_products}
         response = await self.client.get(self.products_url, params=params)
         response.raise_for_status()
@@ -51,16 +45,6 @@ class DataFetchService:
     async def fetch_products_paginated(
         self, limit: int = 100, skip: int = 0
     ) -> Dict[str, Any]:
-        """
-        Fetch products with pagination.
-        
-        Args:
-            limit: Number of products to fetch
-            skip: Number of products to skip
-            
-        Returns:
-            API response with products and pagination info
-        """
         logger.info(f"Fetching products: limit={limit}, skip={skip}")
         
         params = {"limit": limit, "skip": skip}

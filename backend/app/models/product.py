@@ -9,17 +9,23 @@ if TYPE_CHECKING:
     from app.models.image import  ProductImage
     from app.models.review import  Review
 
-class ProductDimensionsBase(BaseModel):
+class ProductDimensionsCreate(BaseModel):
     width: float
     height: float
     depth: float
 
-class ReviewBase(BaseModel):
+class ProductReviewCreate(BaseModel):
     rating: int
     comment: str
     date: str
     reviewer_name: str = Field(alias="reviewerName")
     reviewer_email: str = Field(alias="reviewerEmail")
+
+class ProductMetaCreate(BaseModel):
+    createdAt: str = Field(alias="createdAt")
+    updatedAt: str = Field(alias="updatedAt")
+    barcode: Optional[str] = None
+    qrCode: Optional[str] = Field(alias="qrCode")
 
 class ProductCreate(BaseModel):
     id: Optional[int] = None
@@ -34,17 +40,16 @@ class ProductCreate(BaseModel):
     brand: Optional[str] = None
     sku: str
     weight: int
-    dimensions: ProductDimensionsBase
+    dimensions: ProductDimensionsCreate
     warranty_information: str = Field(alias="warrantyInformation")
     shipping_information: str = Field(alias="shippingInformation")
     availability_status: str = Field(alias="availabilityStatus")
-    reviews: List[ReviewBase]
+    reviews: List[ProductReviewCreate]
     return_policy: str = Field(alias="returnPolicy")
     minimum_order_quantity: int = Field(alias="minimumOrderQuantity")
-    barcode: Optional[str] = None
-    qr_code: Optional[str] = Field(alias="qrCode")
     images: List[str]
     thumbnail: str
+    meta: Optional[ProductMetaCreate] = None
 
 class Product(TimestampMixin):
     id = fields.IntField(pk=True)
@@ -89,7 +94,7 @@ class Product(TimestampMixin):
 
     @property
     def dimensions(self):
-        return ProductDimensionsBase(
+        return ProductDimensionsCreate(
             width=self._dimensions.width,
             height=self._dimensions.height,
             depth=self._dimensions.depth,
@@ -97,7 +102,7 @@ class Product(TimestampMixin):
 
     @property
     def reviews(self):
-        return [ReviewBase(**review.dict()) for review in self._reviews]
+        return [ProductReviewCreate(**review.dict()) for review in self._reviews]
     
     @property
     def images(self):
