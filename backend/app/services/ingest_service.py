@@ -14,13 +14,12 @@ from app.models import (
 from datetime import datetime
 from tortoise.transactions import in_transaction
 from app.models import Product_Pydantic
-from typing import List, Dict, Optional, Any
 logger = get_logger(__name__)
 
 
 class DataIngestionService:
 
-    def __init__(self) -> None:
+    def __init__(self):
         from . import IndexingService
 
         self.products_url = settings.PRODUCT_API_URL
@@ -28,7 +27,7 @@ class DataIngestionService:
         self.indexing_service = IndexingService()
         logger.info(f"DataIngestionService initialized with URL: {self.products_url}")
 
-    async def load_seed_data(self) -> None:
+    async def load_seed_data(self):
         """Load seed data from API and save to database"""
         logger.info("Starting seed data loading...")
 
@@ -76,7 +75,7 @@ class DataIngestionService:
 
         logger.info("Seed data loading completed successfully")
 
-    async def save_products_to_db(self, products:List[Product]):
+    async def save_products_to_db(self, products):
         """Save products to database using models - orchestrates data creation"""
         logger.info(f"Saving {len(products)} products to database...")
 
@@ -151,7 +150,7 @@ class DataIngestionService:
         if saved_products:
             await self._index_saved_products(saved_products)
 
-    async def _index_saved_products(self, products: List[Product]) -> None:
+    async def _index_saved_products(self, products):
         """Index saved products in Elasticsearch"""
         logger.info(f"Indexing {len(products)} products in Elasticsearch...")
         
@@ -173,7 +172,7 @@ class DataIngestionService:
         else:
             logger.warning("No products to index")
 
-    async def _create_or_get_category(self, category_name: Optional[str]) -> Optional[Category]:
+    async def _create_or_get_category(self, category_name):
         if not category_name:
             return None
 
@@ -182,7 +181,7 @@ class DataIngestionService:
         )
         return category
 
-    async def _create_or_get_brand(self, brand_name: Optional[str]) -> Optional[Brand]:
+    async def _create_or_get_brand(self, brand_name):
         if not brand_name:
             return None
 
@@ -191,7 +190,7 @@ class DataIngestionService:
         )
         return brand
 
-    async def _create_product(self, product_data: Dict[str, Any], category: Category, brand: Brand) -> Product:
+    async def _create_product(self, product_data, category, brand):
         return await Product.create(
             title=product_data.get("title", ""),
             description=product_data.get("description", ""),
@@ -210,14 +209,14 @@ class DataIngestionService:
             brand=brand,
         )
 
-    async def _add_tags_to_product(self, product: Product, tags: List[str]) -> None:
+    async def _add_tags_to_product(self, product, tags):
         for tag_name in tags:
             tag, _ = await Tag.get_or_create(
                 name=tag_name, defaults={"slug": tag_name.lower().replace(" ", "-")}
             )
             await product.tags.add(tag)
 
-    async def _create_product_dimensions(self, product: Product, dimensions_data: Dict[str, Any]) -> None:
+    async def _create_product_dimensions(self, product, dimensions_data):
         if dimensions_data:
             await ProductDimensions.create(
                 width=float(dimensions_data.get("width", 0)),
@@ -226,7 +225,7 @@ class DataIngestionService:
                 product=product,
             )
 
-    async def _create_product_images(self, product: Product, images: List[str], thumbnail: Optional[str]) -> None:
+    async def _create_product_images(self, product, images, thumbnail):
         for image_url in images:
             await ProductImage.create(
                 image_url=image_url, is_thumbnail=False, product=product
@@ -238,7 +237,7 @@ class DataIngestionService:
                 image_url=thumbnail, is_thumbnail=True, product=product
             )
 
-    async def _create_product_reviews(self, product: Product, reviews: List[Dict[str, Any]]) -> None:
+    async def _create_product_reviews(self, product, reviews):
         for review_data in reviews:
             await Review.create(
                 rating=int(review_data.get("rating", 0)),
@@ -251,7 +250,7 @@ class DataIngestionService:
                 product=product,
             )
 
-    async def _create_product_meta(self, product: Product, meta_data: Dict[str, Any]) -> None:
+    async def _create_product_meta(self, product, meta_data):
         if meta_data:
             await ProductMeta.create(
                 barcode=meta_data.get("barcode", ""),
@@ -259,7 +258,7 @@ class DataIngestionService:
                 product=product,
             )
 
-    async def close(self) -> None:
+    async def close(self):
         """Close HTTP connections"""
         logger.info("Closing data ingestion service connections")
         await self.client.aclose()
