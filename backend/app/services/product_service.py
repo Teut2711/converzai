@@ -48,7 +48,7 @@ class ProductService:
             logger.info("ProductService singleton initialized")
 
     async def get_all_categories(self) -> List[str]:
-        categories = await Product.all().values_list("category", flat=True)
+        categories = await Product.all().distinct().values_list("category", flat=True)
         return categories
 
     async def get_all_products(
