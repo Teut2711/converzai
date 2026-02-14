@@ -162,18 +162,12 @@ class DatabaseService:
         )
 
     async def _create_product_images(
-        self, product: Product, images: List[str], thumbnail: str
+        self, product: Product, images: List[str]
     ):
         """Create product images"""
         for image_url in images:
             await ProductImage.create(
                 image_url=image_url, product=product
-            )
-
-        # Handle thumbnail
-        if thumbnail:
-            await ProductImage.create(
-                image_url=thumbnail,  product=product
             )
 
     async def _create_product_reviews(
