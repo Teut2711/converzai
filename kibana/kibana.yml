@@ -4,3 +4,4 @@ xpack.monitoring.ui.container.elasticsearch.enabled: true
 elasticsearch.ssl.enabled: false
 server.ssl.enabled: false
 elasticsearch.ssl.verificationMode: none
+xpack.security.encryptionKey: "9f3c8e2a7b4d1f6a0c5e9b8d2a4f7c1e"
