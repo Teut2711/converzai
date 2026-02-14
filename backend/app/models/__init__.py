@@ -35,11 +35,4 @@ __all__ = [
     "Tag_Pydantic",
     "Tag_Pydantic_List",
 
-    "Brand",
-    "Brand_Pydantic",
-    "Brand_Pydantic_List",
-
-    "Category",
-    "Category_Pydantic",
-    "Category_Pydantic_List",
 ]

@@ -8,7 +8,7 @@ from typing import List
 from app.services import ProductService
 
 
-router = APIRouter(prefix="/categories", tags=["category"])
+router = APIRouter(prefix="/categories")
 
 
 @router.get("/", response_model=List[str])

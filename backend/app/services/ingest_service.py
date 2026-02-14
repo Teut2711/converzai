@@ -3,8 +3,6 @@ from app.settings import settings
 from app.utils import get_logger
 from app.models import (
     Product,
-    Category,
-    Brand,
     Tag,
     ProductDimensions,
     ProductImage,
@@ -85,20 +83,6 @@ class DataIngestionService:
         for product_data in products:
             try:
                 async with in_transaction(connection_name="default"):
-                    # Get or create category
-                    category = await self._create_or_get_category(
-                        product_data.get("category")
-                    )
-                    if not category:
-                        continue
-
-                    # Get or create brand
-                    brand = await self._create_or_get_brand(
-                        product_data.get("brand")
-                    )
-                    if not brand:
-                        continue
-
                     sku = product_data.get("sku")
                     existing_product = await Product.get_or_none(
                         sku=sku
@@ -106,9 +90,13 @@ class DataIngestionService:
                     if existing_product:
                         continue
 
+                    # Skip products without category
+                    if not product_data.get("category"):
+                        continue
+
                     # Create product
                     product = await self._create_product(
-                        product_data, category, brand
+                        product_data
                     )
 
                     # Related data
@@ -157,11 +145,13 @@ class DataIngestionService:
         # Convert Product instances to Pydantic models
         pydantic_products = []
         
-        for product in products:
+        product_ids = [product.id for product in products]
+        prefetched_products = await Product.filter(id__in=product_ids).prefetch_related(
+            "tags", "dimensions", "images", "reviews", "meta"
+        )
+        
+        for product in prefetched_products:
             try:
-                # Prefetch related data for computed fields
-                await product.fetch_related("category", "brand", "tags", "dimensions", "images", "reviews", "meta")
-                
                 product_pydantic = await Product_Pydantic.from_tortoise_orm(product)
                 pydantic_products.append(product_pydantic)
             except Exception as e:
@@ -175,25 +165,7 @@ class DataIngestionService:
         else:
             logger.warning("No products to index")
 
-    async def _create_or_get_category(self, category_name):
-        if not category_name:
-            return None
-
-        category, _ = await Category.get_or_create(
-            name=category_name, defaults={"slug": category_name.lower().replace(" ", "-")}
-        )
-        return category
-
-    async def _create_or_get_brand(self, brand_name):
-        if not brand_name:
-            return None
-
-        brand, _ = await Brand.get_or_create(
-            name=brand_name, defaults={"slug": brand_name.lower().replace(" ", "-")}
-        )
-        return brand
-
-    async def _create_product(self, product_data, category, brand):
+    async def _create_product(self, product_data):
         return await Product.create(
             title=product_data.get("title", ""),
             description=product_data.get("description", ""),
@@ -208,8 +180,8 @@ class DataIngestionService:
             availability_status=product_data.get("availabilityStatus", "in_stock"),
             return_policy=product_data.get("returnPolicy", ""),
             minimum_order_quantity=product_data.get("minimumOrderQuantity", 1),
-            category=category,
-            brand=brand,
+            category=product_data.get("category"),
+            brand=product_data.get("brand"),
         )
 
     async def _add_tags_to_product(self, product, tags):

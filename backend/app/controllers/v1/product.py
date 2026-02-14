@@ -10,7 +10,7 @@ from app.services import SearchService
 from app.models import Product_Pydantic_List,Product_Pydantic
 
 
-router = APIRouter(prefix="/products", tags=["products"])
+router = APIRouter(prefix="/products")
 
 class PaginationQuery(BaseModel):
     limit: int = Field(default=10, ge=1)

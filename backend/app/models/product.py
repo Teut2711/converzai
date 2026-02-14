@@ -1,5 +1,4 @@
 from typing import TYPE_CHECKING, Optional, Dict, List, Any
-from decimal import Decimal
 from tortoise import fields
 from tortoise.exceptions import NoValuesFetched
 from app.models.base import TimestampMixin
@@ -35,17 +34,8 @@ class Product(TimestampMixin):
     return_policy = fields.CharField(max_length=100)
     minimum_order_quantity = fields.IntField(min_value=1)
 
-    category = fields.ForeignKeyField(
-        "models.Category",
-        related_name="products",
-        on_delete=fields.RESTRICT,
-    )
-
-    brand = fields.ForeignKeyField(
-        "models.Brand",
-        related_name="products",
-        on_delete=fields.RESTRICT,
-    )
+    category = fields.CharField(max_length=100)
+    brand = fields.CharField(max_length=100, null=True)
 
     tags = fields.ManyToManyField(
         "models.Tag",
@@ -59,16 +49,10 @@ class Product(TimestampMixin):
     meta: fields.ReverseRelation["ProductMeta"]
 
     def category_name(self) -> str:
-        try:
-            return self.category.name if self.category else ""
-        except (NoValuesFetched, AttributeError):
-            return ""
+        return self.category or ""
 
     def brand_name(self) -> str:
-        try:
-            return self.brand.name if self.brand else ""
-        except (NoValuesFetched, AttributeError):
-            return ""
+        return self.brand or ""
 
     def tag_names(self) -> List[str]:
         try:
@@ -124,9 +108,8 @@ class Product(TimestampMixin):
 
     class PydanticMeta:
         computed = ("category_name", "brand_name", "tag_names", "dimensions_data", "image_urls", "reviews_data", "meta_data")
-
+        exclude = ("created_at", "updated_at")
 
 
 Product_Pydantic_List = pydantic_queryset_creator(Product)
 Product_Pydantic = pydantic_model_creator(Product)
-
