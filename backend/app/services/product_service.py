@@ -54,7 +54,7 @@ class ProductService:
     async def get_all_products(
         self, pagination: Optional[Pagination]
     ) -> List[Product_Pydantic_List]:
-        query = Product.all().order_by("-created_at").prefetch_related("tags", "dimensions", "images", "reviews", "meta")
+        query = Product.all().order_by("-created_at").prefetch_related("tags", "dimensions", "images", "reviews")
         
         
         query = query.offset(pagination.offset).limit(pagination.limit)

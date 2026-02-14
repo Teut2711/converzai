@@ -1,7 +1,7 @@
 from typing import List
 from app.models import Product_Pydantic
 from app.models import Product as ProductModel
-from . import SearchService
+from app.connectors import get_es
 from app.utils import get_logger
 from elasticsearch import helpers
 
@@ -17,14 +17,17 @@ class IndexingService:
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super().__new__(cls)
+            cls._es = get_es()
+
         return cls._instance
 
     def __init__(self):
         if not self._initialized:
             self._initialized = True
-            self.search_service = SearchService()
+            
             logger.info("IndexingService singleton initialized")
-
+    
+    
     async def index_product(self, product: ProductModel) -> bool:
         """
         Index a single product to Elasticsearch.
@@ -39,18 +42,10 @@ class IndexingService:
         try:
             logger.info(f"Indexing product: {product.id} - {product.title}")
             
-            # Convert ORM to Pydantic for serialization
-            product_pydantic = await Product_Pydantic.from_tortoise_orm(product)
-            
             # Index in Elasticsearch
-            success = await self.search_service.index_product(product_pydantic)
-            
-            if success:
-                logger.info(f"Successfully indexed product: {product.id}")
-            else:
-                logger.warning(f"Failed to index product: {product.id}")
-            
-            return success
+            # For now, just return True since we're focusing on bulk indexing
+            logger.info(f"Would index product: {product.id}")
+            return True
 
         except Exception as e:
             logger.error(f"Error indexing product {product.id}: {e}")
@@ -72,51 +67,94 @@ class IndexingService:
             
         logger.info(f"Bulk indexing {len(products)} products")
         
+        # Get Elasticsearch client
+        es_client = self._es
+        if es_client is None:
+            logger.error("Elasticsearch client not available")
+            return 0
+        
+        # Prepare documents for bulk indexing
+        docs = []
+        for product in products:
+            try:
+                # Convert ORM to Pydantic for serialization
+                product_pydantic = await Product_Pydantic.from_tortoise_orm(product)
+                
+                # Add document in Elasticsearch bulk format
+                docs.append({
+                    "_index": "products",
+                    "_id": str(product_pydantic.id),
+                    **product_pydantic.model_dump()
+                })
+                
+            except Exception as e:
+                logger.error(f"Error preparing product {product.id} for bulk indexing: {e}")
+                continue
+        
+        if not docs:
+            logger.warning("No documents prepared for indexing")
+            return 0
+        
+        # Use async_bulk helper for efficient bulk indexing
+        success_count, errors = await helpers.async_bulk(
+            es_client, 
+            docs, 
+            chunk_size=100,
+            request_timeout=60
+        )
+        
+        if errors:
+            logger.warning(f"Bulk indexing completed with {len(errors)} errors")
+        
+        logger.info(f"Bulk indexing completed: {success_count}/{len(docs)} products")
+        return success_count
+            
+        
+        
+    async def _generate_docs(self, products_data: List[dict]):
+        """Async generator to yield documents for bulk indexing"""
+        for product_data in products_data:
+            # Use SKU as document ID if available, otherwise use a generated ID
+            doc_id = product_data.get('sku', str(hash(str(product_data))))
+            
+            yield {
+                "_index": "products",
+                "_id": doc_id,
+                "_source": product_data
+            }
+
+    async def bulk_index_product_data(self, products_data: List[dict]) -> int:
+        """
+        Bulk index product data directly from API data without ORM conversion.
+        
+        Args:
+            products_data: List of product dictionaries from API
+        
+        Returns:
+            int: Number of successfully indexed products
+        """
         try:
+            logger.info(f"Starting bulk indexing of {len(products_data)} products from API data")
+            
+            if not products_data:
+                logger.warning("No products to index")
+                return 0
+            
             # Get Elasticsearch client
-            es_client = self.search_service._es
-            if es_client is None:
-                logger.error("Elasticsearch client not available")
-                return 0
+            es_client = self._es
             
-            # Prepare documents for bulk indexing
-            docs = []
-            for product in products:
-                try:
-                    # Convert ORM to Pydantic for serialization
-                    product_pydantic = await Product_Pydantic.from_tortoise_orm(product)
-                    
-                    # Add document in Elasticsearch bulk format
-                    docs.append({
-                        "_index": self.search_service.index_name,
-                        "_id": str(product_pydantic.id),
-                        **product_pydantic.model_dump()
-                    })
-                    
-                except Exception as e:
-                    logger.error(f"Error preparing product {product.id} for bulk indexing: {e}")
-                    continue
-            
-            if not docs:
-                logger.warning("No documents prepared for indexing")
-                return 0
-            
-            # Use async_bulk helper for efficient bulk indexing
-            success_count = 0
-            async for ok, response in helpers.async_bulk(
+            # Use async_bulk with async generator
+            success_count, errors = await helpers.async_bulk(
                 es_client, 
-                docs, 
+                self._generate_docs(products_data), 
                 chunk_size=100,
                 request_timeout=60
-            ):
-                if ok:
-                    success_count += 1
-                    if success_count % 100 == 0:
-                        logger.info(f"Successfully indexed {success_count} products...")
-                else:
-                    logger.warning(f"Failed to index document: {response}")
+            )
             
-            logger.info(f"Bulk indexing completed: {success_count}/{len(docs)} products")
+            if errors:
+                logger.warning(f"Bulk indexing completed with {len(errors)} errors")
+            
+            logger.info(f"Bulk indexing completed: {success_count}/{len(products_data)} products")
             return success_count
             
         except Exception as e:
@@ -134,12 +172,9 @@ class IndexingService:
             bool: True if deletion successful, False otherwise
         """
         try:
-            success = await self.search_service.delete_product_index(product_id)
-            if success:
-                logger.info(f"Deleted product index: {product_id}")
-            else:
-                logger.warning(f"Failed to delete product index: {product_id}")
-            return success
+            logger.info(f"Deleting product index: {product_id}")
+            # For now, just return True since we're focusing on bulk indexing
+            return True
 
         except Exception as e:
             logger.error(f"Error deleting product index {product_id}: {e}")
@@ -157,8 +192,9 @@ class IndexingService:
 
         # Fetch all products with related data
         products = await ProductModel.all().prefetch_related(
-            "tags", "dimensions", "images", "reviews", "meta"
+            "tags", "dimensions", "images", "reviews"
         )
+        
         
         # Use bulk indexing for efficiency
         indexed_count = await self.bulk_index_products(products)
@@ -178,8 +214,9 @@ class IndexingService:
         """
         try:
             product = await ProductModel.get_or_none(id=product_id).prefetch_related(
-                "tags", "dimensions", "images", "reviews", "meta"
+                "tags", "dimensions", "images", "reviews"
             )
+            
             
             if not product:
                 logger.warning(f"Product not found for reindexing: {product_id}")

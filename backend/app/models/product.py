@@ -83,9 +83,29 @@ class Product(TimestampMixin):
         through="product_tag",
     )
 
-    dimensions: fields.ReverseRelation["ProductDimensions"]
-    images: fields.ReverseRelation["ProductImage"]
-    reviews: fields.ReverseRelation["Review"]
+    _dimensions: fields.ReverseRelation["ProductDimensions"]
+    _images: fields.ReverseRelation["ProductImage"]
+    _reviews: fields.ReverseRelation["Review"]
+
+    @property
+    def dimensions(self):
+        return ProductDimensionsBase(
+            width=self._dimensions.width,
+            height=self._dimensions.height,
+            depth=self._dimensions.depth,
+        )
+
+    @property
+    def reviews(self):
+        return [ReviewBase(**review.dict()) for review in self._reviews]
+    
+    @property
+    def images(self):
+        return [image.image_url for image in self._images]
+    class PydanticMeta:
+        computed = ["dimensions", "reviews", "images"]   
+
+
 
 Product_Pydantic_List = pydantic_queryset_creator(Product)
 Product_Pydantic = pydantic_model_creator(Product)

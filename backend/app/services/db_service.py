@@ -113,6 +113,7 @@ class DatabaseService:
             saved_products = await Product.filter(id__in=product_ids).prefetch_related(
                 "tags", "dimensions", "images", "reviews"
             )
+            
 
         return saved_products
 
@@ -256,9 +257,9 @@ class DatabaseService:
     
     async def get_product_by_id(self, product_id: int) -> Optional[Product_Pydantic]:
    
-        product = await Product.get_or_none(id=product_id).prefetch_related(
-            "tags", "dimensions", "images", "reviews"
-        )
+        product = await Product.get_or_none(id=product_id)
+        
+        
         
         if not product:
             logger.warning(f"Product not found: {product_id}")

@@ -53,47 +53,42 @@ class DataIngestionService:
             logger.warning("No valid products after validation, aborting seed data load")
             return
 
-        # Step 3: Save to database
+        # Step 3: Save to database and index to Elasticsearch in parallel
         saved_products = await self.db_service.save_products(validated_products)
         
         if not saved_products:
             logger.warning("No products were saved to database")
             return
 
-        # Step 4: Index to Elasticsearch
-        await self._index_products(saved_products)
+        # Step 4: Index the original API data directly to Elasticsearch
+        await self._index_api_data(validated_products)
 
         logger.info("Seed data loading completed successfully")
 
-    async def _index_products(self, products):
+    async def _index_api_data(self, products):
         """
-        Index saved products to Elasticsearch with proper data fetching.
+        Index original API data directly to Elasticsearch without DB roundtrip.
         
         Args:
-            products: List of Product ORM instances
+            products: List of ProductCreate instances
         """
         if not products:
             logger.info("No products to index")
             return
 
-        logger.info(f"Preparing to index {len(products)} products to Elasticsearch...")
+        logger.info(f"Indexing {len(products)} products to Elasticsearch from API data...")
         
-        # Extract product IDs
-        product_ids = [product.id for product in products]
-        
-        # Fetch products with all related data for proper indexing
-        products_with_relations = await self.db_service.get_products_with_relations(
-            product_ids
-        )
+        # Convert ProductCreate objects to dictionaries for indexing
+        products_data = [product.dict() for product in products]
         
         # Bulk index to Elasticsearch
-        indexed_count = await self.indexing_service.bulk_index_products(
-            products_with_relations
+        indexed_count = await self.indexing_service.bulk_index_product_data(
+            products_data
         )
         
         logger.info(
-            f"Successfully indexed {indexed_count}/{len(products_with_relations)} "
-            f"products to Elasticsearch"
+            f"Successfully indexed {indexed_count}/{len(products_data)} "
+            f"products to Elasticsearch from API data"
         )
 
     async def ingest_and_index_products(self, products_data):

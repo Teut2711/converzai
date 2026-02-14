@@ -2,7 +2,7 @@
 Search views for e-commerce API v1
 """
 
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, Depends
 from typing import List
 
 

@@ -25,6 +25,11 @@ class SearchService:
             logger.info(f"SearchService initialized with index: {cls._instance.index_name}")
         return cls._instance
     
+    
+    def get_index_name(self):
+        """Get the Elasticsearch index name"""
+        return self.index_name
+    
     def _serialize_for_es(self, product_data: Dict[str, Any]) -> Dict[str, Any]:
 
         serialized = {}
