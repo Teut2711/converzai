@@ -237,7 +237,7 @@ class DatabaseService:
             logger.info(f"Fetching all products in category '{category}'")
 
         product_pydantics = await Product_Pydantic_List.from_queryset(query)
-        logger.info(f"Retrieved {len(product_pydantics)} products in category '{category}'")
+        logger.info(f"Retrieved products in category '{category}'")
         return product_pydantics
     
     async def get_product_by_id(self, product_id: int) -> Optional[Product_Pydantic]:
