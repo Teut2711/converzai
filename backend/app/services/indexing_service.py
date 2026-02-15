@@ -122,15 +122,7 @@ class IndexingService:
             return 0
 
     async def delete_product_index(self, product_id: int) -> bool:
-        """
-        Delete product from Elasticsearch index.
-        
-        Args:
-            product_id: ID of the product to remove from index
-        
-        Returns:
-            bool: True if deletion successful, False otherwise
-        """
+
         try:
             logger.info(f"Deleting product index: {product_id}")
             # For now, just return True since we're focusing on bulk indexing
