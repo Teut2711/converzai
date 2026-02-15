@@ -37,7 +37,7 @@ async def init_db(app: FastAPI) -> None:
     global _instance
     _instance = RegisterTortoise(app, config=TORTOISE_ORM, generate_schemas=True)
     await _instance.init_orm()
-
+  
 async def close_db() -> None:
     global _instance
     if _instance:
