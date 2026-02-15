@@ -4,12 +4,11 @@ API endpoint tests for e-commerce API
 
 import pytest
 from fastapi.testclient import TestClient
-from app.main import create_app
+from app.main import app
 
 # Create TestClient fixture
 @pytest.fixture
 def client():
-    app = create_app()
     with TestClient(app) as client:
         yield client
 
