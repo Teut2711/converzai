@@ -26,7 +26,7 @@ def _map_reviews(product: Product) -> list[ProductReviewRead]:
         ProductReviewRead(
             rating=review.rating,
             comment=review.comment,
-            date=review.date,
+            review_date=review.review_date,
             reviewer_name=review.reviewer_name,
             reviewer_email=review.reviewer_email,
         ) for review in product.reviews

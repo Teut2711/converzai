@@ -22,7 +22,7 @@ class ProductReviewCreate(BaseModel):
 class ProductReviewRead(BaseModel):
     rating: int
     comment: str
-    date: str
+    review_date: str
     reviewer_name: str
     reviewer_email: str
 
