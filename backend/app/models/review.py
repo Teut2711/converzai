@@ -2,7 +2,7 @@ from tortoise import fields
 from tortoise.models import Model
 
 
-class Review(Model):
+class ProductReview(Model):
     id = fields.IntField(pk=True)
 
     rating = fields.IntField()

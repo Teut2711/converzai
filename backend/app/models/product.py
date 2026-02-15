@@ -5,7 +5,7 @@ from .base import TimestampMixin
 if TYPE_CHECKING:
     from .dimensions import ProductDimensions
     from .image import ProductImage
-    from .review import Review
+    from .review import ProductReview
     from .tag import ProductTag
 
 
@@ -44,5 +44,5 @@ class Product(TimestampMixin):
 
     dimensions: fields.ReverseRelation["ProductDimensions"]
     images: fields.ReverseRelation["ProductImage"]
-    reviews: fields.ReverseRelation["Review"]
+    reviews: fields.ReverseRelation["ProductReview"]
 

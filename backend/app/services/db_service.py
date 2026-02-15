@@ -7,7 +7,7 @@ from app.models import (
     ProductTag,
     ProductDimensions,
     ProductImage,
-    Review,
+    ProductReview,
 )
 from app.schemas import (
     ProductCreate,
@@ -163,7 +163,7 @@ class DatabaseService:
     ):
         """Create product reviews"""
         for review in reviews:
-            await Review.create(
+            await ProductReview.create(
                 rating=review.rating,
                 comment=review.comment,
                 reviewer_name=review.reviewer_name,

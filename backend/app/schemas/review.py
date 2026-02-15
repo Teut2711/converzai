@@ -5,7 +5,7 @@ Review schemas for e-commerce API
 from pydantic import BaseModel, ConfigDict
 from pydantic.alias_generators import to_camel
 from tortoise.contrib.pydantic import pydantic_queryset_creator, pydantic_model_creator
-from app.models.review import Review
+from app.models.review import ProductReview
 
 
 
@@ -33,5 +33,5 @@ class ProductReviewRead(BaseModel):
 
 
 
-ProductReview_Pydantic_List = pydantic_queryset_creator(Review)
-ProductReview_Pydantic = pydantic_model_creator(Review)
+ProductReview_Pydantic_List = pydantic_queryset_creator(ProductReview)
+ProductReview_Pydantic = pydantic_model_creator(ProductReview)
