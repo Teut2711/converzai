@@ -36,8 +36,8 @@ def _map_reviews(product: Product) -> list[ProductReviewRead]:
 def _map_meta(product: Product) -> ProductMetaRead:
     """Map product metadata to schema."""
     return ProductMetaRead(
-        created_at=product.created_at.isoformat(),
-        updated_at=product.updated_at.isoformat(),
+        created_at=product.created_at,
+        updated_at=product.updated_at,
         barcode=product.barcode,
         qr_code=product.qr_code,
     )
