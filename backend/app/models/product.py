@@ -1,14 +1,14 @@
-from typing import TYPE_CHECKING, Optional, List
+from typing import Optional, List
 from tortoise import fields
 from tortoise.contrib.pydantic import pydantic_queryset_creator, pydantic_model_creator
 from pydantic import BaseModel, ConfigDict
 from pydantic.alias_generators import to_camel
-from app.models.base import TimestampMixin
+from .base import TimestampMixin
  
-if TYPE_CHECKING:
-    from app.models.dimensions import ProductDimensions
-    from app.models.image import  ProductImage
-    from app.models.review import  Review
+
+from .dimensions import ProductDimensions
+from .image import  ProductImage
+from .review import  Review
 
 class ProductDimensionsCreate(BaseModel):
     width: float
@@ -95,28 +95,9 @@ class Product(TimestampMixin):
         through="product_tag",
     )
 
-    _dimensions: fields.ReverseRelation["ProductDimensions"]
-    _images: fields.ReverseRelation["ProductImage"]
-    _reviews: fields.ReverseRelation["Review"]
-
-    @property
-    def dimensions(self):
-        return ProductDimensionsCreate(
-            width=self._dimensions.width,
-            height=self._dimensions.height,
-            depth=self._dimensions.depth,
-        )
-
-    @property
-    def reviews(self):
-        return [ProductReviewCreate(**review.dict()) for review in self._reviews]
-    
-    @property
-    def images(self):
-        return [image.image_url for image in self._images]
-    class PydanticMeta:
-        computed = ["dimensions", "reviews", "images"]   
-
+    dimensions: fields.ReverseRelation["ProductDimensions"]
+    images: fields.ReverseRelation["ProductImage"]
+    reviews: fields.ReverseRelation["Review"]
 
 
 Product_Pydantic_List = pydantic_queryset_creator(Product)
