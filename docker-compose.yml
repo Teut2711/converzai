@@ -89,8 +89,8 @@ services:
       elasticsearch:
         condition: service_healthy
     restart: unless-stopped
-    volumes:
-      - ./backend/app:/app/app
+    # volumes:
+    #   - ./backend/app:/app/app
     # healthcheck:
     #   test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
     #   interval: 30s
