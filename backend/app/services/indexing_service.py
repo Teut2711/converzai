@@ -37,7 +37,7 @@ class IndexingService:
         # Use async_bulk helper for efficient bulk indexing
         success_count, errors = await helpers.async_bulk(
             es_client, 
-            self._generate_docs_model(products_data), 
+            self._generate_docs(products_data), 
             chunk_size=100,
             request_timeout=60
         )
