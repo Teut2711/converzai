@@ -8,6 +8,7 @@ from app.models.product import Product_Pydantic
 from app.utils import get_logger
 from app.connectors import get_es
 from app.settings import settings
+from .db_service import get_db_service
 
 logger = get_logger(__name__)
 
@@ -18,7 +19,7 @@ class SearchService:
         """Initialize SearchService with optional dependencies"""
         self._es = es_client or get_es()
         self.index_name = index_name
-        self.db_service = db_service
+        self.db_service = db_service or get_db_service()
         logger.info(f"SearchService initialized with index: {self.index_name}")
     
     
