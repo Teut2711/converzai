@@ -24,5 +24,5 @@ class ProductTagRead(BaseModel):
     )
 
 
-Tag_Pydantic_List = pydantic_queryset_creator(Tag)
-Tag_Pydantic = pydantic_model_creator(Tag)
+ProductTag_Pydantic_List = pydantic_queryset_creator(Tag)
+ProductTag_Pydantic = pydantic_model_creator(Tag)

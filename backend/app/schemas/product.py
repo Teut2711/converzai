@@ -30,10 +30,10 @@ class ProductCreate(BaseModel):
     warranty_information: str
     shipping_information: str
     availability_status: str
-    reviews: List[ProductReviewCreate]
+    reviews: List["ProductReviewCreate"]
     return_policy: str
     minimum_order_quantity: int
-    images: List[str]
+    images: List["ProductImageCreate"]
     thumbnail: str
     meta: Optional[ProductMetaCreate] = None
     
@@ -55,16 +55,16 @@ class ProductRead(BaseModel):
     sku: str
     weight: int
 
-    dimensions: ProductDimensionsRead
+    dimensions: "ProductDimensionsRead"
     warranty_information: str
     shipping_information: str
     availability_status: str
 
-    reviews: List[ProductReviewRead]
+    reviews: List["ProductReviewRead"]
     return_policy: str
     minimum_order_quantity: int
 
-    images: List[ProductImageRead]
+    images: List["ProductImageRead"]
     thumbnail: Optional[str]
     meta: ProductMetaRead
 
