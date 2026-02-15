@@ -14,16 +14,13 @@ logger = get_logger(__name__)
 
 class SearchService:
     
-    def __init__(self, es_client: Optional[Any] = None, db_service=None):
+    def __init__(self, es_client: Optional[Any] = None, db_service=None, index_name: str = settings.ELASTICSEARCH_INDEX_NAME):
         """Initialize SearchService with optional dependencies"""
         self._es = es_client or get_es()
-        self.index_name = settings.ELASTICSEARCH_INDEX_NAME
+        self.index_name = index_name
         self.db_service = db_service
         logger.info(f"SearchService initialized with index: {self.index_name}")
     
-    def get_index_name(self):
-        """Get the Elasticsearch index name"""
-        return self.index_name
     
     async def search_products(self, query: str, size: int = 20, regex_search: bool = False) -> List[Product_Pydantic]:
         """Search products using Elasticsearch and hydrate with database data"""
