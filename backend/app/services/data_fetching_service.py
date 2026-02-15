@@ -30,7 +30,9 @@ class DataFetchService:
         data = await self._fetch_from_api()
         if data:
             await self._save_to_cache(cache_file, data)
-        return self._convert_to_product_creates(data)
+        products =  self._convert_to_product_creates(data)
+
+        return products
 
     async def fetch_products_paginated(
         self, limit: int = 100, offset: int = 0
