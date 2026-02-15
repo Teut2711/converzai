@@ -7,6 +7,7 @@ if TYPE_CHECKING:
     from .dimensions import ProductDimensions
     from .image import ProductImage
     from .review import Review
+    from .tag import ProductTag
 
 
 class Product(TimestampMixin):
@@ -40,11 +41,7 @@ class Product(TimestampMixin):
     barcode = fields.CharField(max_length=50, unique=True, null=True)
     qr_code = fields.CharField(max_length=500, null=True)
 
-    tags = fields.ManyToManyField(
-        "models.Tag",
-        related_name="products",
-        through="product_tag",
-    )
+    tags: fields.ManyToManyRelation["ProductTag"]
 
     dimensions: fields.ReverseRelation["ProductDimensions"]
     images: fields.ReverseRelation["ProductImage"]

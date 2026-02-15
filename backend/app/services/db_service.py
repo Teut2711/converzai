@@ -4,7 +4,7 @@ from tortoise.transactions import in_transaction
 from pydantic import BaseModel
 from app.models import (
     Product,
-    Tag,
+    ProductTag,
     ProductDimensions,
     ProductImage,
     Review,
@@ -127,10 +127,11 @@ class DatabaseService:
     async def _add_tags_to_product(self, product: Product, tags: List[str]):
         """Add tags to a product"""
         for tag_name in tags:
-            tag, _ = await Tag.get_or_create(
-                name=tag_name, defaults={"slug": tag_name.lower().replace(" ", "-")}
+            # Create tag with foreign key to product
+            await ProductTag.create(
+                name=tag_name, 
+                product=product
             )
-            await product.tags.add(tag)
 
     async def _create_product_dimensions(
         self, product: Product, dimensions: ProductDimensionsCreate

@@ -5,7 +5,12 @@ from tortoise import models
 if TYPE_CHECKING:
     from app.models.product import Product
 
-class Tag(models.Model):
+class ProductTag(models.Model):
     id = fields.IntField(pk=True)
     name = fields.CharField(max_length=50, unique=True)
-    products: fields.ManyToManyRelation["Product"]
+
+    products: fields.ManyToManyRelation["Product"] = fields.ManyToManyField(
+        "models.Product",
+        related_name="tags",
+        through="product_product_tag",
+    )
