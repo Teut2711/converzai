@@ -48,11 +48,11 @@ async def get_products(
 @router.get("/search", response_model=Product_Pydantic_List)
 async def search_products(
     query: str = Query(..., description="Search query", min_length=3),
-    regex_search: bool = Query(False, description="Enable regex-based search"),
+    use_regex: bool = Query(False, description="Enable regex-based search"),
     size: int = Query(20, description="Number of results to return"),
     service: SearchService = Depends(SearchService),
 ):
-    products = await service.search_products(query, size=size, regex_search=regex_search)
+    products = await service.search_products(query, size=size, regex_search=use_regex)
     return products
 
 @router.get("/{product_id}", response_model=Product_Pydantic)
