@@ -3,7 +3,7 @@ Product views for e-commerce API v1
 """
 
 from fastapi import APIRouter, HTTPException, Depends, Query
-from typing import Optional
+from typing import Optional, List
 from pydantic import BaseModel, Field
 from app.services import get_db_service, get_search_service, DatabaseService, SearchService
 from app.schemas import ProductRead, Product_Pydantic_List
@@ -18,7 +18,7 @@ class PaginationQuery(BaseModel):
 
 
 class PaginatedProductsResponse(BaseModel):
-    products: ProductRead
+    products: List[ProductRead]
     total: int
     limit: int
     offset: int
