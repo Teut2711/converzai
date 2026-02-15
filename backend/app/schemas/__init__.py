@@ -34,6 +34,9 @@ from .tag import (
     ProductTag_Pydantic_List,
 )
 
+
+ProductMetaCreate.model_rebuild()
+
 __all__ = [
     # Product schemas
     "ProductCreate",
