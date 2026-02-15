@@ -184,11 +184,10 @@ class DatabaseService:
         else:
             logger.info("Fetching all products without pagination")
 
-        product_pydantics = await Product_Pydantic_List.from_queryset(query)
-
+        products = await query
         total = await Product.all().count()
 
-        return product_pydantics, total
+        return products, total
 
     async def get_products_by_category(
         self, category: str, pagination: Optional[Pagination] = None
@@ -207,13 +206,12 @@ class DatabaseService:
             )
         else:
             logger.info(f"Fetching all products in category '{category}'")
-
-        product_pydantics = await Product_Pydantic_List.from_queryset(query)
+        products = await query
         total = await Product.filter(category=category).count()
         logger.info(f"Retrieved products in category '{category}'")
-        return product_pydantics, total
+        return products, total
 
-    async def get_product_by_id(self, product_id: int) -> Optional[ProductRead]:
+    async def get_product_by_id(self, product_id: int) -> Optional[Product]:
         product = await Product.get_or_none(id=product_id).prefetch_related(
             "tags", "dimensions", "images", "reviews"
         )
@@ -222,13 +220,12 @@ class DatabaseService:
             logger.warning(f"Product not found: {product_id}")
             return None
 
-        product_read = map_product_to_read(product)
         logger.info(f"Retrieved product: {product_id} - {product.title}")
-        return product_read
+        return product
 
     async def get_products_by_ids(
         self, ids: List[int], pagination: Optional[Pagination] = None
-    ) -> List[Product_Pydantic_List]:
+    ) -> List[Product]:
         query = (
             Product.filter(id__in=ids)
             .order_by("-created_at")
@@ -243,10 +240,10 @@ class DatabaseService:
             )
         else:
             logger.info("Fetching all products")
+        products = await query
 
-        product_pydantics = await Product_Pydantic_List.from_queryset(query)
         logger.info("Retrieved products by IDs")
-        return product_pydantics
+        return products
 
 
 def get_db_service() -> DatabaseService:
