@@ -6,6 +6,8 @@ FastAPI application with MySQL and Elasticsearch integration using Tortoise ORM
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
+from app.services import DataIngestionService
+from app.controllers.v1 import v1_router
 from app.utils import get_logger
 from app.connectors import init_db, close_db
 from app.connectors import init_es, close_es
@@ -19,9 +21,7 @@ async def lifespan(app: FastAPI):
     # Initialize database and Elasticsearch
     await init_db(app)
     await init_es()
-
-
-    from app.services import DataIngestionService
+    
     # Load seed data using DataIngestionService
     ingestion_service = DataIngestionService()
     try:
@@ -45,7 +45,6 @@ app = FastAPI(
     
 )
 
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -53,10 +52,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# noqa: F401
-from app.controllers.v1 import v1_router
-
 
 # Include v1 API
 app.include_router(v1_router)
