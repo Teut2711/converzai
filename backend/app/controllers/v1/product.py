@@ -3,9 +3,9 @@ Product views for e-commerce API v1
 """
 
 from fastapi import APIRouter, HTTPException, Depends, Query
-from typing import Optional,List
+from typing import Optional
 from pydantic import BaseModel, Field
-from app.services import DatabaseService, SearchService
+from app.services import get_db_service, get_search_service, DatabaseService, SearchService
 from app.models import Product_Pydantic
 from app.models import Product_Pydantic_List
 
@@ -24,13 +24,14 @@ class PaginatedProductsResponse(BaseModel):
     limit: int
     offset: int
 
+
 @router.get("/", response_model=PaginatedProductsResponse)
 async def get_products(
     pagination: PaginationQuery = Depends(),
     category: Optional[str] = Query(
         None, description="Filter products by category name"
     ),
-    service: DatabaseService = Depends(DatabaseService),
+    service: DatabaseService = Depends(get_db_service),
 ):
     if category:
         products, total = await service.get_products_by_category(category, pagination)
@@ -44,13 +45,12 @@ async def get_products(
     )
 
 
-
 @router.get("/search", response_model=Product_Pydantic_List)
 async def search_products(
     query: str = Query(..., description="Search query", min_length=3),
     use_regex: bool = Query(False, description="Enable regex-based search"),
     size: int = Query(20, description="Number of results to return"),
-    service: SearchService = Depends(SearchService),
+    service: SearchService = Depends(get_search_service),
 ):
     products = await service.search_products(query, size=size, regex_search=use_regex)
     return products

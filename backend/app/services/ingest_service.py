@@ -104,3 +104,6 @@ class DataIngestionService:
         """Close all service connections"""
         logger.info("Closing DataIngestionService connections")
         await self.fetch_service.close()
+
+
+ 

@@ -127,3 +127,7 @@ class SearchService:
         except Exception as e:
             logger.error(f"Error deleting index: {e}")
             return False
+
+
+def get_search_service() -> SearchService:
+    return SearchService()

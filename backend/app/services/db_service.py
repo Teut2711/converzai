@@ -254,4 +254,6 @@ class DatabaseService:
         product_pydantics = await Product_Pydantic_List.from_queryset(query)
         logger.info("Retrieved products by IDs")
         return product_pydantics
-   
+
+def get_db_service()->DatabaseService:
+    return DatabaseService()
