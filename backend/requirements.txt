@@ -2,7 +2,7 @@ fastapi
 uvicorn[standard]
 tortoise-orm
 elasticsearch[async]
-pydantic
+pydantic[email]
 pydantic-settings
 pytest
 pytest-asyncio

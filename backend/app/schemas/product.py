@@ -1,6 +1,6 @@
 from typing import Optional, List
 from pydantic import BaseModel, ConfigDict
-from pydantic.alias_generators import to_camel
+from pydantic.alias_generators import to_camel, to_snake
 from tortoise.contrib.pydantic import pydantic_queryset_creator, pydantic_model_creator
 from app.models.product import Product
 
@@ -36,8 +36,9 @@ class ProductCreate(BaseModel):
 
     model_config = ConfigDict(
         alias_generator=to_camel,
-        populate_by_name=True,  # Allow both camelCase and snake_case
-    )
+        populate_by_name=True,  
+        
+        )
 
 
 class ProductRead(BaseModel):
@@ -68,8 +69,9 @@ class ProductRead(BaseModel):
     meta: Optional["ProductMetaRead"]
 
     model_config = ConfigDict(
-        alias_generator=to_camel,
-        from_attributes=True,
+     alias_generator=to_snake,
+        populate_by_name=True,  
+        
     )
 
 

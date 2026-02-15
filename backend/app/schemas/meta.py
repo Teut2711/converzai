@@ -9,7 +9,7 @@ Meta schemas for e-commerce API
 from typing import Optional
 from datetime import datetime
 from pydantic import BaseModel, ConfigDict
-from pydantic.alias_generators import to_camel
+from pydantic.alias_generators import to_camel, to_snake
  
 class ProductMetaCreate(BaseModel):
     created_at: datetime
@@ -17,7 +17,9 @@ class ProductMetaCreate(BaseModel):
     barcode: Optional[str] = None
     qr_code: Optional[str] = None
     
-    model_config = ConfigDict(alias_generator=to_camel)
+    model_config = ConfigDict(     alias_generator=to_camel,
+        populate_by_name=True,  
+        )
 
 
 class ProductMetaRead(BaseModel):
@@ -28,7 +30,7 @@ class ProductMetaRead(BaseModel):
     
     model_config = ConfigDict(
         from_attributes=True,
-        alias_generator=to_camel,
+        alias_generator=to_snake,
     )
 
 

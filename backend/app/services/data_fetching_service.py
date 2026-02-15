@@ -50,9 +50,9 @@ class DataFetchService:
                 product_create = ProductCreate(**product_dict)
                 product_creates.append(product_create)
             except Exception as e:
+                
                 logger.error(f"Error creating ProductCreate: {e}")
                 continue
-        
         return product_creates
 
     async def fetch_products_paginated(
