@@ -146,9 +146,7 @@ class DatabaseService:
     async def _create_product_images(
         self, product: Product, images: List[str]
     ):
-        print(images )
-        exit()
-
+ 
         """Create product images"""
         for image in images:
             await ProductImage.create(
