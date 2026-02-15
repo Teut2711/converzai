@@ -45,7 +45,7 @@ class DataIngestionService:
         if not validated_products:
             logger.warning("No valid products after validation, aborting seed data load")
             return
-
+        
         await self.db_service.save_products(validated_products)
         
         await self._index_api_data(validated_products)

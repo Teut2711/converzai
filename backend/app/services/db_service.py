@@ -138,17 +138,22 @@ class DatabaseService:
 
     async def _create_product_reviews(
         self, product: Product, reviews: List[ProductReviewCreate]
-    ):
+    ) -> None:
         """Create product reviews"""
         for review in reviews:
-            await ProductReview.create(
-                rating=review.rating,
-                comment=review.comment,
-                reviewer_name=review.reviewer_name,
-                reviewer_email=review.reviewer_email,
-                review_date=datetime.fromisoformat(review.date.replace("Z", "+00:00")),
-                product=product,
-            )
+            try:
+                await ProductReview.create(
+                    rating=review.rating,
+                    comment=review.comment,
+                    reviewer_name=review.reviewer_name,
+                    reviewer_email=review.reviewer_email,
+                    review_date=review.date,
+                    product=product,
+                )
+            except Exception as e:
+                logger.error(f"Error creating review: {e}")
+                logger.error(f"Review data: {review}")
+                continue
 
     async def get_all_categories(self) -> List[str]:
         """
