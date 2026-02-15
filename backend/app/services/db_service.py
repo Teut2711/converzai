@@ -194,7 +194,7 @@ class DatabaseService:
 
         product_pydantics = await Product_Pydantic_List.from_queryset(query)
 
-        total = await Product.count()
+        total = await Product.all().count()
 
         return product_pydantics, total
 
@@ -252,7 +252,6 @@ class DatabaseService:
             logger.info("Fetching all products")
 
         product_pydantics = await Product_Pydantic_List.from_queryset(query)
-        total = await Product.filter(id__in=ids).count()
         logger.info("Retrieved products by IDs")
-        return product_pydantics, total
+        return product_pydantics
    
