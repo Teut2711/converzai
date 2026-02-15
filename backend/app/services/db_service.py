@@ -195,7 +195,7 @@ class DatabaseService:
         product_pydantics = await Product_Pydantic_List.from_queryset(query)
 
         total = await Product.all().count()
-
+ 
         return product_pydantics, total
 
     async def get_products_by_category(
@@ -217,9 +217,9 @@ class DatabaseService:
             logger.info(f"Fetching all products in category '{category}'")
 
         product_pydantics = await Product_Pydantic_List.from_queryset(query)
-        count = await Product.filter(category=category).count()
+        total = await Product.filter(category=category).count()
         logger.info(f"Retrieved products in category '{category}'")
-        return product_pydantics, count
+        return product_pydantics, total
     
     async def get_product_by_id(self, product_id: int) -> Optional[Product_Pydantic]:
    
