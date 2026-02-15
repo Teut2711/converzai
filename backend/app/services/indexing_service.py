@@ -1,8 +1,9 @@
 from typing import List
 from app.models import Product_Pydantic
-from app.models import Product as ProductModel
+from app.models import Product
 from app.connectors import get_es
 from app.utils import get_logger
+from app.models import ProductCreate
 from elasticsearch import helpers
 
 logger = get_logger(__name__)
@@ -12,7 +13,6 @@ class IndexingService:
     """Service for managing Elasticsearch indexing operations"""
 
     _instance = None
-    _initialized = False
 
     def __new__(cls):
         if cls._instance is None:
@@ -21,15 +21,8 @@ class IndexingService:
 
         return cls._instance
 
-    def __init__(self):
-        if not self._initialized:
-            self._initialized = True
-            
-            logger.info("IndexingService singleton initialized")
-    
-    
- 
-    async def bulk_index_products(self, products: List[ProductModel]) -> int:
+
+    async def bulk_index_products(self, products: List[Product]) -> int:
         """
         Bulk index multiple products to Elasticsearch using async_bulk helper.
         
@@ -101,7 +94,7 @@ class IndexingService:
                 "_source": product_data
             }
 
-    async def bulk_index_product_data(self, products_data: List[dict]) -> int:
+    async def bulk_index_product_data(self, products_data: List[ProductCreate]) -> int:
         """
         Bulk index product data directly from API data without ORM conversion.
         
@@ -169,7 +162,7 @@ class IndexingService:
         logger.info("Starting full reindex of all products")
 
         # Fetch all products with related data
-        products = await ProductModel.all().prefetch_related(
+        products = await Product.all().prefetch_related(
             "tags", "dimensions", "images", "reviews"
         )
         
