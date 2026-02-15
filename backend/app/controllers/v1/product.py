@@ -2,6 +2,7 @@
 Product views for e-commerce API v1
 """
 
+from _pytest.raises import P
 from fastapi import APIRouter, HTTPException, Depends, Query
 from typing import Optional, List
 from pydantic import BaseModel, Field
@@ -44,14 +45,14 @@ async def get_products(
     )
 
 
-@router.get("/search", response_model=Product_Pydantic_List)
+@router.get("/search", response_model=List[ProductRead])
 async def search_products(
     query: str = Query(..., description="Search query", min_length=3),
-    use_regex: bool = Query(False, description="Enable regex-based search"),
+    use_wildcard: bool = Query(False, description="Enable wildcard-based search"),
     size: int = Query(20, description="Number of results to return"),
     service: SearchService = Depends(get_search_service),
 ):
-    products = await service.search_products(query, size=size, regex_search=use_regex)
+    products = await service.search_products(query, size=size, regex_search=use_wildcard)
     return [map_product_to_read(product) for product in products]
 
 @router.get("/{product_id}", response_model=ProductRead)

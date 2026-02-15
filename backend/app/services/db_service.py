@@ -226,6 +226,7 @@ class DatabaseService:
     async def get_products_by_ids(
         self, ids: List[int], pagination: Optional[Pagination] = None
     ) -> List[Product]:
+ 
         query = (
             Product.filter(id__in=ids)
             .order_by("-created_at")
