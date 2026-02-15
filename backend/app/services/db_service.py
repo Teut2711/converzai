@@ -23,6 +23,7 @@ logger = get_logger(__name__)
 
 class Pagination(BaseModel):
     """Pagination parameters for product queries"""
+
     offset: int = 0
     limit: int = 10
 
@@ -32,62 +33,51 @@ class DatabaseService:
     Service responsible for all database operations related to products.
     Handles both read (queries) and write (create/update) operations.
     """
-    
+
     def __init__(self):
         logger.info("DatabaseService initialized")
 
     async def save_products(self, products_data: List[ProductCreate]) -> List[Product]:
-   
         logger.info(f"Saving {len(products_data)} products to database...")
 
         saved_count = 0
         saved_products = []
 
         for product_data in products_data:
-            try:
-                async with in_transaction(connection_name="default"):
-                    # Check if product already exists
-                    _id = product_data.id
-                    existing_product = await Product.get_or_none(id=_id)
-                    if existing_product:
-                        logger.debug(f"Product with ID {_id} already exists, skipping")
-                        continue
+            async with in_transaction(connection_name="default"):
+                # Check if product already exists
+                _id = product_data.id
+                existing_product = await Product.get_or_none(id=_id)
+                if existing_product:
+                    logger.debug(f"Product with ID {_id} already exists, skipping")
+                    continue
 
-                    # Skip products without category
-                    if not product_data.category:
-                        logger.debug(f"Product {product_data.title} has no category, skipping")
-                        continue
-
-                    # Create product and related data
-                    product = await self._create_product(product_data)
-                    await self._add_tags_to_product(
-                        product, product_data.tags
+                # Skip products without category
+                if not product_data.category:
+                    logger.debug(
+                        f"Product {product_data.title} has no category, skipping"
                     )
-                    await self._create_product_dimensions(
-                        product, product_data.dimensions
-                    )
-                    await self._create_product_images(
-                        product,
-                        product_data.images,
-                    )
-                    await self._create_product_reviews(
-                        product,
-                        product_data.reviews,
-                    )
-         
+                    continue
 
-                # Transaction successful - add to saved products
-                saved_products.append(product)
-                saved_count += 1
-
-                if saved_count % 10 == 0:
-                    logger.info(f"Saved {saved_count} products...")
-
-            except Exception as e:
-                logger.error(
-                    f"Error saving product {product_data.title}: {e}"
+                # Create product and related data
+                product = await self._create_product(product_data)
+                await self._add_tags_to_product(product, product_data.tags)
+                await self._create_product_dimensions(product, product_data.dimensions)
+                await self._create_product_images(
+                    product,
+                    product_data.images,
                 )
-                # Automatic rollback happens here
+                await self._create_product_reviews(
+                    product,
+                    product_data.reviews,
+                )
+
+            # Transaction successful - add to saved products
+            saved_products.append(product)
+            saved_count += 1
+
+            if saved_count % 10 == 0:
+                logger.info(f"Saved {saved_count} products...")
 
         logger.info(f"Successfully saved {saved_count} products to database")
 
@@ -97,7 +87,6 @@ class DatabaseService:
             saved_products = await Product.filter(id__in=product_ids).prefetch_related(
                 "tags", "dimensions", "images", "reviews"
             )
-            
 
         return saved_products
 
@@ -123,6 +112,7 @@ class DatabaseService:
             qr_code=product_data.meta.qr_code,
             barcode=product_data.meta.barcode,
         )
+
     async def _add_tags_to_product(self, product: Product, tags: List[str]) -> None:
         """Attach tags to a product (idempotent, M2M-safe)."""
 
@@ -137,6 +127,7 @@ class DatabaseService:
 
             tag, _ = await ProductTag.get_or_create(name=tag_name)
             await product.tags.add(tag)
+
     async def _create_product_dimensions(
         self, product: Product, dimensions: ProductDimensionsCreate
     ):
@@ -148,15 +139,10 @@ class DatabaseService:
             product=product,
         )
 
-    async def _create_product_images(
-        self, product: Product, images: List[str]
-    ):
- 
+    async def _create_product_images(self, product: Product, images: List[str]):
         """Create product images"""
         for image_url in images:
-            await ProductImage.create(
-                image_url=image_url, product=product
-            )
+            await ProductImage.create(image_url=image_url, product=product)
 
     async def _create_product_reviews(
         self, product: Product, reviews: List[ProductReviewCreate]
@@ -172,11 +158,10 @@ class DatabaseService:
                 product=product,
             )
 
-
     async def get_all_categories(self) -> List[str]:
         """
         Get all distinct product categories.
-        
+
         Returns:
             List of category names
         """
@@ -187,11 +172,12 @@ class DatabaseService:
     async def get_all_products(
         self, pagination: Optional[Pagination] = None
     ) -> Product_Pydantic_List:
-       
-        query = Product.all().order_by("-created_at").prefetch_related(
-            "tags", "dimensions", "images", "reviews"
+        query = (
+            Product.all()
+            .order_by("-created_at")
+            .prefetch_related("tags", "dimensions", "images", "reviews")
         )
-        
+
         if pagination:
             query = query.offset(pagination.offset).limit(pagination.limit)
             logger.info(
@@ -204,18 +190,18 @@ class DatabaseService:
         product_pydantics = await Product_Pydantic_List.from_queryset(query)
 
         total = await Product.all().count()
- 
+
         return product_pydantics, total
 
     async def get_products_by_category(
         self, category: str, pagination: Optional[Pagination] = None
     ) -> Product_Pydantic_List:
-        
-        
-        query = Product.filter(category=category).order_by("-created_at").prefetch_related(
-            "tags", "dimensions", "images", "reviews"
+        query = (
+            Product.filter(category=category)
+            .order_by("-created_at")
+            .prefetch_related("tags", "dimensions", "images", "reviews")
         )
-        
+
         if pagination:
             query = query.offset(pagination.offset).limit(pagination.limit)
             logger.info(
@@ -229,30 +215,29 @@ class DatabaseService:
         total = await Product.filter(category=category).count()
         logger.info(f"Retrieved products in category '{category}'")
         return product_pydantics, total
-    
+
     async def get_product_by_id(self, product_id: int) -> Optional[ProductRead]:
-   
         product = await Product.get_or_none(id=product_id).prefetch_related(
-            'tags', 'dimensions', 'images', 'reviews'
+            "tags", "dimensions", "images", "reviews"
         )
-        
+
         if not product:
             logger.warning(f"Product not found: {product_id}")
             return None
-            
+
         product_read = map_product_to_read(product)
         logger.info(f"Retrieved product: {product_id} - {product.title}")
         return product_read
 
-
     async def get_products_by_ids(
         self, ids: List[int], pagination: Optional[Pagination] = None
     ) -> List[Product_Pydantic_List]:
-
-        query = Product.filter(id__in=ids).order_by("-created_at").prefetch_related(
-            "tags", "dimensions", "images", "reviews"
+        query = (
+            Product.filter(id__in=ids)
+            .order_by("-created_at")
+            .prefetch_related("tags", "dimensions", "images", "reviews")
         )
-        
+
         if pagination:
             query = query.offset(pagination.offset).limit(pagination.limit)
             logger.info(
@@ -266,5 +251,6 @@ class DatabaseService:
         logger.info("Retrieved products by IDs")
         return product_pydantics
 
-def get_db_service()->DatabaseService:
+
+def get_db_service() -> DatabaseService:
     return DatabaseService()
