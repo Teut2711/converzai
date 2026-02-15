@@ -1,6 +1,5 @@
 from typing import TYPE_CHECKING
 from tortoise import fields
-from tortoise.contrib.pydantic import pydantic_queryset_creator, pydantic_model_creator
 from .base import TimestampMixin
 
 if TYPE_CHECKING:
