@@ -48,7 +48,7 @@ class Settings(BaseSettings):
     @computed_field(return_type=Path)
     @property
     def BASE_DIR(self) -> Path:
-        return Path(__file__).parent.parent.parent
+        return Path(__file__).parent
 
     PRODUCT_API_URL: str = Field(
         default="https://dummyjson.com/products",
