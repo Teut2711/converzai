@@ -2,7 +2,6 @@
 Product views for e-commerce API v1
 """
 
-from _pytest.raises import P
 from fastapi import APIRouter, HTTPException, Depends, Query
 from typing import Optional, List
 from pydantic import BaseModel, Field
