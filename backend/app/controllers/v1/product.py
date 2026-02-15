@@ -7,6 +7,7 @@ from typing import Optional
 from pydantic import BaseModel, Field
 from app.services import DatabaseService, SearchService
 from app.models import Product_Pydantic
+from backend.app.models.product import Product_Pydantic_List
 
 
 router = APIRouter(prefix="/products")
@@ -34,8 +35,7 @@ async def get_products(
     if category:
         products, total = await service.get_products_by_category(category, pagination)
     else:
-        products = await service.get_all_products(pagination)
-        total = await service.get_product_count()
+        products,total = await service.get_all_products(pagination)
     
     return PaginatedProductsResponse(
         products=products,
@@ -46,7 +46,7 @@ async def get_products(
 
 
 
-@router.get("/search", response_model=PaginatedProductsResponse)
+@router.get("/search", response_model=Product_Pydantic_List)
 async def search_products(
     query: str = Query(..., description="Search query", min_length=3),
     regex_search: bool = Query(False, description="Enable regex-based search"),
@@ -54,12 +54,7 @@ async def search_products(
     service: SearchService = Depends(SearchService),
 ):
     products = await service.search_products(query, size=size, regex_search=regex_search)
-    return PaginatedProductsResponse(
-        products=products,
-        total=len(products),
-        limit=size,
-        offset=0
-    )
+    return products
 
 @router.get("/{product_id}", response_model=Product_Pydantic)
 async def get_product(
