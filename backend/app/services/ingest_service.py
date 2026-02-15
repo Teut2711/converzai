@@ -1,4 +1,5 @@
 from app.utils import get_logger
+from typing import List
 from app.models import ProductCreate
 
 logger = get_logger(__name__)
@@ -55,7 +56,7 @@ class DataIngestionService:
 
         logger.info("Seed data loading completed successfully")
 
-    async def _index_api_data(self, products):
+    async def _index_api_data(self, products:List[ProductCreate]):
         """
         Index original API data directly to Elasticsearch without DB roundtrip.
         
@@ -68,15 +69,12 @@ class DataIngestionService:
 
         logger.info(f"Indexing {len(products)} products to Elasticsearch from API data...")
         
-        # Convert ProductCreate objects to dictionaries for indexing
-        products_data = [product.model_dump() for product in products]
-        
         indexed_count = await self.indexing_service.bulk_index_product_data(
-            products_data
+            products
         )
         
         logger.info(
-            f"Successfully indexed {indexed_count}/{len(products_data)} "
+            f"Successfully indexed {indexed_count}/{len(products)} "
             f"products to Elasticsearch from API data"
         )
 
