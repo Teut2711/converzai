@@ -17,7 +17,6 @@ class ProductDimensionsCreate(BaseModel):
 
 
 class ProductDimensionsRead(BaseModel):
-    id: int
     width: float
     height: float
     depth: float

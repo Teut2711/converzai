@@ -14,9 +14,7 @@ from .dimensions import (
 from .image import (
     ProductImageCreate,
     ProductImageRead,
-    ProductImage_Pydantic_List,
-    ProductImage_Pydantic,
-)
+   )
 from .review import (
     ProductReviewCreate,
     ProductReviewRead,
@@ -30,12 +28,8 @@ from .meta import (
 from .tag import (
     ProductTagCreate,
     ProductTagRead,
-    ProductTag_Pydantic,
-    ProductTag_Pydantic_List,
 )
 
-
-ProductMetaCreate.model_rebuild()
 
 __all__ = [
     # Product schemas

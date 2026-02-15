@@ -37,6 +37,7 @@ def map_product_to_read(product: Product) -> ProductRead:
         minimum_order_quantity=product.minimum_order_quantity,
         thumbnail=product.thumbnail,
         dimensions=ProductDimensionsRead(
+            id=product.dimensions.id,
             width=product.dimensions.width,
             height=product.dimensions.height,
             depth=product.dimensions.depth,

@@ -233,7 +233,7 @@ class DatabaseService:
     async def get_product_by_id(self, product_id: int) -> Optional[ProductRead]:
    
         product = await Product.get_or_none(id=product_id).prefetch_related(
-            'dimensions', 'images', 'reviews'
+            'tags', 'dimensions', 'images', 'reviews'
         )
         
         if not product:
