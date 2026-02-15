@@ -7,7 +7,7 @@ from typing import Optional
 from pydantic import BaseModel, Field
 from app.services import DatabaseService, SearchService
 from app.models import Product_Pydantic
-from backend.app.models.product import Product_Pydantic_List
+from app.models import Product_Pydantic_List
 
 
 router = APIRouter(prefix="/products")
