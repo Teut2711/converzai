@@ -33,5 +33,5 @@ class ProductReviewRead(BaseModel):
 
 
 
-Review_Pydantic_List = pydantic_queryset_creator(Review)
-Review_Pydantic = pydantic_model_creator(Review)
+ProductReview_Pydantic_List = pydantic_queryset_creator(Review)
+ProductReview_Pydantic = pydantic_model_creator(Review)

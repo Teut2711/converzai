@@ -35,7 +35,7 @@ class ProductCreate(BaseModel):
     minimum_order_quantity: int
     images: List["ProductImageCreate"]
     thumbnail: str
-    meta: Optional[ProductMetaCreate] = None
+    meta: Optional["ProductMetaCreate"] = None
     
     model_config = ConfigDict(alias_generator=to_camel)
 
@@ -66,7 +66,7 @@ class ProductRead(BaseModel):
 
     images: List["ProductImageRead"]
     thumbnail: Optional[str]
-    meta: ProductMetaRead
+    meta: Optional["ProductMetaRead"]
 
     model_config = ConfigDict(
         alias_generator=to_camel,

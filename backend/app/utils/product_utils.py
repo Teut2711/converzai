@@ -8,7 +8,7 @@ from app.schemas import (
     ProductDimensionsRead,
     ProductMetaRead,
 )
-from backend.app.schemas.product import ProductReviewRead
+from app.schemas import ProductReviewRead
  
 
 
