@@ -177,7 +177,7 @@ class DatabaseService:
 
     async def get_all_products(
         self, pagination: Optional[Pagination] = None
-    ) -> List[Product_Pydantic_List]:
+    ) -> Product_Pydantic_List:
        
         query = Product.all().order_by("-created_at").prefetch_related(
             "tags", "dimensions", "images", "reviews"
@@ -200,7 +200,7 @@ class DatabaseService:
 
     async def get_products_by_category(
         self, category: str, pagination: Optional[Pagination] = None
-    ) -> List[Product_Pydantic_List]:
+    ) -> Product_Pydantic_List:
         
         
         query = Product.filter(category=category).order_by("-created_at").prefetch_related(
