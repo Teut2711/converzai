@@ -2,18 +2,13 @@
 Image schemas for e-commerce API
 """
 
+from typing import List
 from pydantic import BaseModel, ConfigDict
 from pydantic.alias_generators import to_camel
 from tortoise.contrib.pydantic import pydantic_queryset_creator, pydantic_model_creator
 from app.models.image import ProductImage
 
-class ProductImageCreate(BaseModel):
-    image_url: str
-
-    model_config = ConfigDict(
-        alias_generator=to_camel,
-    )
-
+ProductImageCreate = str
 
 class ProductImageRead(BaseModel):
     id: int

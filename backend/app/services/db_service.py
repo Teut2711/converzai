@@ -15,7 +15,6 @@ from app.schemas import (
     ProductReviewCreate,
     ProductRead,
     Product_Pydantic_List,
-    Product_Pydantic,
 )
 from app.utils import get_logger, map_product_to_read
 
@@ -147,10 +146,13 @@ class DatabaseService:
     async def _create_product_images(
         self, product: Product, images: List[str]
     ):
+        print(images )
+        exit()
+
         """Create product images"""
-        for image_url in images:
+        for image in images:
             await ProductImage.create(
-                image_url=image_url, product=product
+                image_url=image, product=product
             )
 
     async def _create_product_reviews(
