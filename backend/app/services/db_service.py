@@ -126,10 +126,10 @@ class DatabaseService:
 
     async def _add_tags_to_product(self, product: Product, tags: List[str]):
         """Add tags to a product"""
-        for tag_name in tags:
+        for tag in tags:
             # Create tag with foreign key to product
             await ProductTag.create(
-                name=tag_name, 
+                name=tag.name, 
                 product=product
             )
 
