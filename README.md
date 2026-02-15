@@ -142,24 +142,80 @@ converzai/
 - **IndexingService** - Bulk data indexing
 - **DataIngestionService** - Seed data loading
 
-## 🧪 Testing
+## 📐 Data Models (UML)
 
-### Run Tests
-```bash
-# From backend directory
-pytest
+### Entity Relationship Diagram
 
-# With coverage
-pytest --cov=app --cov-report=html
-
-# Specific test file
-pytest tests/test_api.py
+```
+┌─────────────────┐       ┌─────────────────────┐
+│    Product     │◄──────┤  ProductDimensions  │
+├─────────────────┤ 1:1   ├─────────────────────┤
+│ - id (PK)      │       │ - id (PK)          │
+│ - title         │       │ - width             │
+│ - description   │       │ - height            │
+│ - price         │       │ - depth             │
+│ - discount_%    │       └─────────────────────┘
+│ - rating        │
+│ - stock         │       ┌─────────────────────┐
+│ - sku          │◄──────┤   ProductImage     │
+│ - weight        │ 1:N   ├─────────────────────┤
+│ - warranty     │       │ - id (PK)          │
+│ - shipping     │       │ - image_url         │
+│ - availability │       └─────────────────────┘
+│ - return_policy │
+│ - min_order    │       ┌─────────────────────┐
+│ - category     │◄──────┤   ProductReview    │
+│ - brand        │ 1:N   ├─────────────────────┤
+│ - thumbnail    │       │ - id (PK)          │
+│ - barcode      │       │ - rating            │
+│ - qr_code      │       │ - comment           │
+└─────────────────┘       │ - reviewer_name     │
+        │                │ - reviewer_email    │
+        │                │ - review_date       │
+        │                └─────────────────────┘
+        │
+        │                ┌─────────────────────┐
+        └───────────────┤    ProductTag      │
+          N:M           ├─────────────────────┤
+                        │ - id (PK)          │
+                        │ - name             │
+                        └─────────────────────┘
 ```
 
-### Test Configuration
-- Located in `backend/pytest.ini`
-- Coverage target: 80%
-- Async test support with pytest-asyncio
+### Model Details
+
+#### Product (Main Entity)
+- **Primary Key**: `id` (Integer)
+- **Core Fields**: `title`, `description`, `price`, `rating`, `stock`
+- **Business Fields**: `sku`, `category`, `brand`, `thumbnail`
+- **Metadata**: `discount_percentage`, `warranty_information`, `shipping_information`
+- **Constraints**: `barcode` (unique), `sku` (unique, indexed)
+
+#### ProductDimensions (One-to-One)
+- **Purpose**: Physical product measurements
+- **Fields**: `width`, `height`, `depth` (Float)
+- **Relationship**: One-to-one with Product
+
+#### ProductImage (One-to-Many)
+- **Purpose**: Product gallery images
+- **Fields**: `image_url` (String, max 500 chars)
+- **Relationship**: Many images per Product
+
+#### ProductReview (One-to-Many)
+- **Purpose**: Customer reviews and ratings
+- **Fields**: `rating`, `comment`, `reviewer_name`, `reviewer_email`, `review_date`
+- **Relationship**: Many reviews per Product
+- **Index**: Composite index on (`product_id`, `rating`)
+
+#### ProductTag (Many-to-Many)
+- **Purpose**: Product categorization and tagging
+- **Fields**: `name` (String, unique, max 50 chars)
+- **Relationship**: Many-to-many with Products via junction table
+
+### TimestampMixin
+All models inherit from `TimestampMixin` providing:
+- `created_at` - Auto-generated timestamp
+- `updated_at` - Auto-updated timestamp
 
 ## ⚙️ Configuration
 
@@ -188,22 +244,7 @@ API_HOST=0.0.0.0
 API_PORT=8000
 SECRET_KEY=your-secret-key
 ```
-
-## 🔧 Development
-
-### Adding New Endpoints
-1. Create controller in `app/controllers/v1/`
-2. Add router to `app/controllers/v1/__init__.py`
-3. Implement business logic in services
-4. Add tests in `app/tests/`
-
-### Database Migrations
-```bash
-# Generate migration (if using aerich)
-aerich init -t app.TORTOISE_ORM
-aerich migrate --name="migration_name"
-aerich upgrade
-```
+ 
 
 ### Caching
 - Cache directory: `app/cached_data/`
@@ -219,11 +260,6 @@ aerich upgrade
 - **kibana**: Elasticsearch visualization dashboard
 - **backend**: FastAPI application
 
-### Service Health Checks
-All services include health checks:
-- MySQL: `mysqladmin ping`
-- Elasticsearch: `curl -f http://localhost:9200/_cluster/health`
-- Kibana: `curl -f http://localhost:5601/api/status`
 
 ## 📊 Monitoring
 
@@ -233,81 +269,15 @@ Access at http://localhost:5601
 - Monitor index performance
 - Query Elasticsearch data
 
-### Logs
-```bash
-# View application logs
-docker compose logs backend
 
-# View all services
-docker compose logs -f
-
-# Specific service
-docker compose logs mysql
-```
-
-## 🚨 Troubleshooting
-
-### Common Issues
-
-#### Database Connection Errors
-```bash
-# Check MySQL container
-docker compose logs mysql
-
-# Restart services
-docker compose restart mysql backend
-```
-
-#### Elasticsearch Connection Issues
-```bash
-# Check Elasticsearch
-curl http://localhost:9200/_cluster/health
-
-# Restart Elasticsearch
-docker compose restart elasticsearch
-```
-
-#### Test Failures
-```bash
-# Clean test environment
-docker compose down -v
-docker compose up -d
-# Wait for services to be healthy
-pytest
-```
+ 
 
 ### Port Conflicts
 Default ports:
 - API: 8100
 - MySQL: 3306
-- Elasticsearch: 9200, 9300
+- Elasticsearch: 9200
 - Kibana: 5601
 
 Modify in `docker-compose.yml` if needed.
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests for new functionality
-5. Ensure all tests pass
-6. Submit a pull request
-
-## 📄 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## 🔗 Additional Resources
-
-- [FastAPI Documentation](https://fastapi.tiangolo.com/)
-- [Tortoise ORM](https://tortoise.github.io/)
-- [Elasticsearch Python Client](https://elasticsearch-py.readthedocs.io/)
-- [Docker Compose](https://docs.docker.com/compose/)
-
-## 📞 Support
-
-For support and questions:
-- Create an issue in the repository
-- Check existing documentation
-- Review test cases for usage examples
+ 
