@@ -13,9 +13,10 @@ logger = get_logger(__name__)
 class IndexingService:
     """Service for managing Elasticsearch indexing operations"""
 
-    def __init__(self, es_client: Optional[Any] = None):
+    def __init__(self, es_client: Optional[Any] = None, index_name: str = settings.ELASTICSEARCH_INDEX_NAME):
         """Initialize IndexingService with optional Elasticsearch client dependency"""
         self._es = es_client or get_es()
+        self.index_name = index_name
         logger.info("IndexingService initialized")
 
 
@@ -50,7 +51,7 @@ class IndexingService:
                 
                 # Add document in Elasticsearch bulk format
                 docs.append({
-                    "_index": settings.ELASTICSEARCH_INDEX_NAME,
+                    "_index": self.index_name,
                     "_id": str(product_pydantic.id),
                     **product_pydantic.model_dump()
                 })
@@ -91,15 +92,7 @@ class IndexingService:
             }
 
     async def bulk_index_product_data(self, products_data: List[ProductCreate]) -> int:
-        """
-        Bulk index product data directly from API data without ORM conversion.
-        
-        Args:
-            products_data: List of product dictionaries from API
-        
-        Returns:
-            int: Number of successfully indexed products
-        """
+
         try:
             logger.info(f"Starting bulk indexing of {len(products_data)} products from API data")
             
