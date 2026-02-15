@@ -4,11 +4,13 @@ Handles product search, filtering, and suggestions
 """
 
 from typing import List, Optional, Any
-from app.models.product import Product_Pydantic
 from app.utils import get_logger
 from app.connectors import get_es
 from app.settings import settings
 from .db_service import get_db_service
+from app.schemas import (
+    Product_Pydantic, Product_Pydantic_List
+)
 
 logger = get_logger(__name__)
 

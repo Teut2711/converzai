@@ -1,6 +1,6 @@
 from app.utils import get_logger
 from typing import List
-from app.models import ProductCreate
+from app.schemas import ProductCreate
 
 logger = get_logger(__name__)
 

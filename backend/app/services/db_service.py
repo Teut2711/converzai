@@ -8,12 +8,16 @@ from app.models import (
     ProductDimensions,
     ProductImage,
     Review,
+)
+from app.schemas import (
     ProductCreate,
     ProductDimensionsCreate,
     ProductReviewCreate,
+    ProductRead,
+    Product_Pydantic_List,
+    Product_Pydantic,
 )
-from app.models import Product_Pydantic, Product_Pydantic_List
-from app.utils import get_logger
+from app.utils import get_logger, map_product_to_read
 
 logger = get_logger(__name__)
 
@@ -221,17 +225,19 @@ class DatabaseService:
         logger.info(f"Retrieved products in category '{category}'")
         return product_pydantics, total
     
-    async def get_product_by_id(self, product_id: int) -> Optional[Product_Pydantic]:
+    async def get_product_by_id(self, product_id: int) -> Optional[ProductRead]:
    
-        product = await Product.get_or_none(id=product_id)
+        product = await Product.get_or_none(id=product_id).prefetch_related(
+            'dimensions', 'images', 'reviews'
+        )
         
         if not product:
             logger.warning(f"Product not found: {product_id}")
             return None
             
-        product_pydantic = await Product_Pydantic.from_tortoise_orm(product)
+        product_read = map_product_to_read(product)
         logger.info(f"Retrieved product: {product_id} - {product.title}")
-        return product_pydantic
+        return product_read
 
 
     async def get_products_by_ids(

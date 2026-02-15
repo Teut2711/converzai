@@ -2,7 +2,7 @@ import httpx
 from typing import List, Dict, Any
 from app.settings import settings
 from app.utils import get_logger
-from app.models import ProductCreate
+from app.schemas import ProductCreate
 
 
 logger = get_logger(__name__)

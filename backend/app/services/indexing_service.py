@@ -2,9 +2,9 @@ from typing import List, Optional, Any
 from app.models import Product
 from app.connectors import get_es
 from app.utils import get_logger
-from app.models import ProductCreate
+from app.schemas import ProductCreate
 from app.settings import settings
-from app.models import Product_Pydantic_List
+from app.schemas import Product_Pydantic_List
 from elasticsearch import helpers
 
 logger = get_logger(__name__)

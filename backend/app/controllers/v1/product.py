@@ -6,8 +6,7 @@ from fastapi import APIRouter, HTTPException, Depends, Query
 from typing import Optional
 from pydantic import BaseModel, Field
 from app.services import get_db_service, get_search_service, DatabaseService, SearchService
-from app.models import Product_Pydantic
-from app.models import Product_Pydantic_List
+from app.schemas import ProductRead, Product_Pydantic_List
 
 
 router = APIRouter(prefix="/products")
@@ -55,7 +54,7 @@ async def search_products(
     products = await service.search_products(query, size=size, regex_search=use_regex)
     return products
 
-@router.get("/{product_id}", response_model=Product_Pydantic)
+@router.get("/{product_id}", response_model=ProductRead)
 async def get_product(
     product_id: int, service: DatabaseService = Depends(DatabaseService)
 ):
