@@ -68,16 +68,19 @@ def test_get_product_by_id_not_found(client: TestClient):
 
 def test_search_products_basic(client: TestClient):
     """Test basic product search"""
-    response = client.get("/api/v1/products/search?query=smartphone")
+    response = client.get("/api/v1/products/search?query=groceries")
     # May fail due to Elasticsearch not being available in test environment
-    assert response.status_code in [200, 500]
+    data = response.json()
+    assert len(data) > 0
+   
+
 
 
 def test_search_products_missing_query(client: TestClient):
     """Test searching products without query parameter"""
     response = client.get("/api/v1/products/search?query=groceries")
     assert response.status_code == 200
-    data = response.json()["products"]
+    data = response.json()
     assert len(data)  > 0
 
 
@@ -85,7 +88,7 @@ def test_search_products_with_regex(client: TestClient):
     """Test searching products with regex flag"""
     response = client.get("/api/v1/products/search?query=groc&regex=true")
     assert response.status_code == 200
-    data = response.json()["products"]
+    data = response.json()
     assert len(data)  > 0
 
 
