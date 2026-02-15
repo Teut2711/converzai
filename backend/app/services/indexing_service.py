@@ -79,16 +79,15 @@ class IndexingService:
             
         
         
-    async def _generate_docs(self, products_data: List[dict]):
-        """Async generator to yield documents for bulk indexing"""
+    async def _generate_docs(self, products_data: List[ProductCreate]):
         for product_data in products_data:
-          
-            doc_id = product_data.get('id', str(hash(str(product_data))))
-            
+            doc = product_data.model_dump()
+            doc_id = doc["id"]
+
             yield {
                 "_index": settings.ELASTICSEARCH_INDEX_NAME,
-                "_id": doc_id,
-                "_source": product_data
+                "_id": str(doc_id),
+                "_source": doc
             }
 
     async def bulk_index_product_data(self, products_data: List[ProductCreate]) -> int:
