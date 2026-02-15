@@ -29,7 +29,7 @@ class DataIngestionService:
         """
         logger.info("Starting seed data loading process...")
 
-        products_create = await self.fetch_service.fetch_all_products()
+        products_create = await self.fetch_service.get_all_products()
         if not products_create:
             logger.warning("No products fetched from API, aborting seed data load")
             return
