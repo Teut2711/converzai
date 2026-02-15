@@ -123,16 +123,20 @@ class DatabaseService:
             qr_code=product_data.meta.qr_code,
             barcode=product_data.meta.barcode,
         )
+    async def _add_tags_to_product(self, product: Product, tags: List[str]) -> None:
+        """Attach tags to a product (idempotent, M2M-safe)."""
 
-    async def _add_tags_to_product(self, product: Product, tags: List[str]):
-        """Add tags to a product"""
-        for tag in tags:
-            # Create tag with foreign key to product
-            await ProductTag.create(
-                name=tag.name, 
-                product=product
-            )
+        if not tags:
+            return
 
+        for raw_name in tags:
+            tag_name = raw_name.strip().lower()
+
+            if not tag_name:
+                continue
+
+            tag, _ = await ProductTag.get_or_create(name=tag_name)
+            await product.tags.add(tag)
     async def _create_product_dimensions(
         self, product: Product, dimensions: ProductDimensionsCreate
     ):
@@ -149,9 +153,9 @@ class DatabaseService:
     ):
  
         """Create product images"""
-        for image in images:
+        for image_url in images:
             await ProductImage.create(
-                image_url=image, product=product
+                image_url=image_url, product=product
             )
 
     async def _create_product_reviews(
