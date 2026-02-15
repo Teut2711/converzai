@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional, Any
 from app.models import Product_Pydantic
 from app.models import Product
 from app.connectors import get_es
@@ -13,14 +13,10 @@ logger = get_logger(__name__)
 class IndexingService:
     """Service for managing Elasticsearch indexing operations"""
 
-    _instance = None
-
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-            cls._es = get_es()
-
-        return cls._instance
+    def __init__(self, es_client: Optional[Any] = None):
+        """Initialize IndexingService with optional Elasticsearch client dependency"""
+        self._es = es_client or get_es()
+        logger.info("IndexingService initialized")
 
 
     async def bulk_index_products(self, products: List[Product]) -> int:

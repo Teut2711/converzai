@@ -10,12 +10,14 @@ class DataIngestionService:
     and Elasticsearch indexing for product data.
     """
 
-    def __init__(self):
+    def __init__(self, fetch_service=None, db_service=None, indexing_service=None):
+        """Initialize DataIngestionService with optional dependency injection"""
+        # Import locally to avoid circular imports
         from app.services import DataFetchService, DatabaseService, IndexingService
-
-        self.fetch_service = DataFetchService()
-        self.db_service = DatabaseService()
-        self.indexing_service = IndexingService()
+        
+        self.fetch_service = fetch_service or DataFetchService()
+        self.db_service = db_service or DatabaseService()
+        self.indexing_service = indexing_service or IndexingService()
         
         logger.info("DataIngestionService initialized with all sub-services")
 

@@ -2,13 +2,11 @@
 Product views for e-commerce API v1
 """
 
-from annotated_types import MinLen
 from fastapi import APIRouter, HTTPException, Depends, Query
 from typing import Optional
 from pydantic import BaseModel, Field
-from app.services import DatabaseService
-from app.services import SearchService
-from app.models import Product_Pydantic_List, Product_Pydantic
+from app.services import DatabaseService, SearchService
+from app.models import Product_Pydantic
 
 
 router = APIRouter(prefix="/products")
@@ -19,7 +17,13 @@ class PaginationQuery(BaseModel):
     offset: int = Field(default=0, ge=0)
 
 
-@router.get("/", response_model=Product_Pydantic_List)
+class PaginatedProductsResponse(BaseModel):
+    products: list[Product_Pydantic]
+    total: int
+    limit: int
+    offset: int
+
+@router.get("/", response_model=PaginatedProductsResponse)
 async def get_products(
     pagination: PaginationQuery = Depends(),
     category: Optional[str] = Query(
@@ -28,20 +32,34 @@ async def get_products(
     service: DatabaseService = Depends(DatabaseService),
 ):
     if category:
-        return await service.get_products_by_category(category, pagination)
+        products, total = await service.get_products_by_category(category, pagination)
     else:
-        return await service.get_all_products(pagination)
+        products = await service.get_all_products(pagination)
+        total = await service.get_product_count()
+    
+    return PaginatedProductsResponse(
+        products=products,
+        total=total,
+        limit=pagination.limit,
+        offset=pagination.offset
+    )
 
 
 
-@router.get("/search", response_model=Product_Pydantic_List)
+@router.get("/search", response_model=PaginatedProductsResponse)
 async def search_products(
     query: str = Query(..., description="Search query", min_length=3),
     regex_search: bool = Query(False, description="Enable regex-based search"),
     size: int = Query(20, description="Number of results to return"),
     service: SearchService = Depends(SearchService),
 ):
-    return await service.search_products(query, size=size, regex_search=regex_search)
+    products = await service.search_products(query, size=size, regex_search=regex_search)
+    return PaginatedProductsResponse(
+        products=products,
+        total=len(products),
+        limit=size,
+        offset=0
+    )
 
 @router.get("/{product_id}", response_model=Product_Pydantic)
 async def get_product(

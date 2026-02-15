@@ -28,22 +28,10 @@ class DatabaseService:
     """
     Service responsible for all database operations related to products.
     Handles both read (queries) and write (create/update) operations.
-    
-    This is a singleton service - only one instance exists.
     """
     
-    _instance = None
-    _initialized = False
-    
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-        return cls._instance
-    
     def __init__(self):
-        if not self._initialized:
-            self._initialized = True
-            logger.info("DatabaseService singleton initialized")
+        logger.info("DatabaseService initialized")
 
     async def save_products(self, products_data: List[ProductCreate]) -> List[Product]:
    
@@ -175,9 +163,6 @@ class DatabaseService:
                 product=product,
             )
 
-    # ============================================================================
-    # READ OPERATIONS - Product Queries
-    # ============================================================================
 
     async def get_all_categories(self) -> List[str]:
         """
@@ -208,21 +193,16 @@ class DatabaseService:
             logger.info("Fetching all products without pagination")
 
         product_pydantics = await Product_Pydantic_List.from_queryset(query)
-        return product_pydantics
+
+        total = await Product.count()
+
+        return product_pydantics, total
 
     async def get_products_by_category(
         self, category: str, pagination: Optional[Pagination] = None
     ) -> List[Product_Pydantic_List]:
-        """
-        Get products filtered by category with optional pagination.
         
-        Args:
-            category: Category name to filter by
-            pagination: Optional pagination parameters
-            
-        Returns:
-            List of Product_Pydantic_List instances in the category
-        """
+        
         query = Product.filter(category=category).order_by("-created_at").prefetch_related(
             "tags", "dimensions", "images", "reviews"
         )
@@ -237,14 +217,13 @@ class DatabaseService:
             logger.info(f"Fetching all products in category '{category}'")
 
         product_pydantics = await Product_Pydantic_List.from_queryset(query)
+        count = await Product.filter(category=category).count()
         logger.info(f"Retrieved products in category '{category}'")
-        return product_pydantics
+        return product_pydantics, count
     
     async def get_product_by_id(self, product_id: int) -> Optional[Product_Pydantic]:
    
         product = await Product.get_or_none(id=product_id)
-        
-        
         
         if not product:
             logger.warning(f"Product not found: {product_id}")
@@ -254,38 +233,11 @@ class DatabaseService:
         logger.info(f"Retrieved product: {product_id} - {product.title}")
         return product_pydantic
 
-    async def get_product_count(self, category: Optional[str] = None) -> int:
-        """
-        Get total count of products, optionally filtered by category.
-        
-        Args:
-            category: Optional category to filter by
-            
-        Returns:
-            Total count of products
-        """
-        if category:
-            count = await Product.filter(category=category).count()
-            logger.info(f"Product count in category '{category}': {count}")
-        else:
-            count = await Product.all().count()
-            logger.info(f"Total product count: {count}")
-        
-        return count
-    
+
     async def get_products_by_ids(
         self, ids: List[int], pagination: Optional[Pagination] = None
     ) -> List[Product_Pydantic_List]:
-        """
-        Get products filtered by category with optional pagination.
-        
-        Args:
-            category: Category name to filter by
-            pagination: Optional pagination parameters
-            
-        Returns:
-            List of Product_Pydantic_List instances in the category
-        """
+
         query = Product.filter(id__in=ids).order_by("-created_at").prefetch_related(
             "tags", "dimensions", "images", "reviews"
         )
@@ -300,6 +252,7 @@ class DatabaseService:
             logger.info("Fetching all products")
 
         product_pydantics = await Product_Pydantic_List.from_queryset(query)
-        logger.info("Retrieved products")
-        return product_pydantics
+        total = await Product.filter(id__in=ids).count()
+        logger.info("Retrieved products by IDs")
+        return product_pydantics, total
    

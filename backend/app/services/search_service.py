@@ -3,30 +3,23 @@ Search service for e-commerce API using Elasticsearch
 Handles product search, filtering, and suggestions
 """
 
-from typing import List
+from typing import List, Optional, Any
 from app.models.product import Product_Pydantic
 from app.utils import get_logger
 from app.connectors import get_es
+from app.settings import settings
 
 logger = get_logger(__name__)
 
 
 class SearchService:
     
-    _instance = None
-    
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super(SearchService, cls).__new__(cls)
-            cls._instance.index_name = "products"
-            cls._es = get_es()
-            logger.info(f"SearchService initialized with index: {cls._instance.index_name}")
-        return cls._instance
-    
-    def __init__(self):
-        """Initialize SearchService with DatabaseService dependency"""
-        from app.services.db_service import DatabaseService
-        self.db_service = DatabaseService()
+    def __init__(self, es_client: Optional[Any] = None, db_service=None):
+        """Initialize SearchService with optional dependencies"""
+        self._es = es_client or get_es()
+        self.index_name = settings.ELASTICSEARCH_INDEX_NAME
+        self.db_service = db_service
+        logger.info(f"SearchService initialized with index: {self.index_name}")
     
     def get_index_name(self):
         """Get the Elasticsearch index name"""

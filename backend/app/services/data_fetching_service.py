@@ -11,9 +11,10 @@ logger = get_logger(__name__)
 class DataFetchService:
     """Service responsible for fetching product data from external API"""
 
-    def __init__(self):
+    def __init__(self, client=None):
+        """Initialize DataFetchService with optional HTTP client dependency"""
         self.products_url = settings.PRODUCT_API_URL
-        self.client = httpx.AsyncClient(timeout=30.0)
+        self.client = client or httpx.AsyncClient(timeout=30.0)
         logger.info(f"DataFetchService initialized with URL: {self.products_url}")
 
     async def fetch_all_products(self) -> List[ProductCreate]:
