@@ -60,3 +60,10 @@ app.include_router(v1_router)
 @app.get("/health")
 async def health_check():
     return {"status": "healthy"}
+
+@app.get("/")
+async def root():
+    return {
+        "message": "E-commerce API",
+        "version": "1.0.0"
+    }
