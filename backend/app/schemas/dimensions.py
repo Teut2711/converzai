@@ -8,6 +8,13 @@ from pydantic.alias_generators import to_camel
 from tortoise.contrib.pydantic import pydantic_queryset_creator, pydantic_model_creator
 from app.models.dimensions import ProductDimensions
 
+class ProductDimensionsCreate(BaseModel):
+    width: float
+    height: float
+    depth: float
+
+
+
 
 class ProductDimensionsRead(BaseModel):
     id: int

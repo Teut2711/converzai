@@ -8,7 +8,13 @@ from tortoise.contrib.pydantic import pydantic_queryset_creator, pydantic_model_
 from app.models.tag import Tag
 
 
-class TagRead(BaseModel):
+class ProductTagCreate(BaseModel):
+    name: str
+    
+    model_config = ConfigDict(alias_generator=to_camel)
+
+
+class ProductTagRead(BaseModel):
     id: int
     name: str
 

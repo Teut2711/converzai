@@ -8,18 +8,29 @@ from tortoise.contrib.pydantic import pydantic_queryset_creator, pydantic_model_
 from app.models.review import Review
 
 
-class ReviewRead(BaseModel):
-    id: int
+
+class ProductReviewCreate(BaseModel):
     rating: int
     comment: str
+    date: str
     reviewer_name: str
     reviewer_email: str
-    review_date: str
+    
+    model_config = ConfigDict(alias_generator=to_camel)
+
+
+class ProductReviewRead(BaseModel):
+    rating: int
+    comment: str
+    date: str
+    reviewer_name: str
+    reviewer_email: str
 
     model_config = ConfigDict(
         from_attributes=True,
         alias_generator=to_camel,
     )
+
 
 
 Review_Pydantic_List = pydantic_queryset_creator(Review)
