@@ -37,7 +37,7 @@ class DatabaseService:
     def __init__(self):
         logger.info("DatabaseService initialized")
 
-    async def save_products(self, products_data: List[ProductCreate]) -> List[Product]:
+    async def save_products(self, products_data: List[ProductCreate]) -> None:
         logger.info(f"Saving {len(products_data)} products to database...")
 
         saved_count = 0
@@ -81,14 +81,6 @@ class DatabaseService:
 
         logger.info(f"Successfully saved {saved_count} products to database")
 
-        # Prefetch related data for the saved products
-        if saved_products:
-            product_ids = [p.id for p in saved_products]
-            saved_products = await Product.filter(id__in=product_ids).prefetch_related(
-                "tags", "dimensions", "images", "reviews"
-            )
-
-        return saved_products
 
     async def _create_product(self, product_data: ProductCreate) -> Product:
         """Create a product record from ProductCreate data"""
