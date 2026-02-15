@@ -21,7 +21,10 @@ class Settings(BaseSettings):
 
 
 
-
+    ELASTICSEARCH_INDEX_NAME: str = Field(
+        default="products",
+        env="ELASTICSEARCH_INDEX_NAME"
+    )
     ELASTICSEARCH_URL: str = Field(
         default="http://elasticsearch:9200",
         env="ELASTICSEARCH_URL"
@@ -57,29 +60,6 @@ class Settings(BaseSettings):
         env="ELASTIC_SEARCH_PRODUCT_INDEX"
     ) 
 
-    # Test mode configuration
-    @computed_field(return_type=str)
-    @property
-    def DB_DATABASE_TEST(self) -> str:
-        """Test database name with _TEST suffix"""
-        return f"{self.DB_DATABASE}_TEST" if self.DEBUG else self.DB_DATABASE
 
-    @computed_field(return_type=str)
-    @property
-    def ELASTICSEARCH_INDEX_TEST(self) -> str:
-        """Test Elasticsearch index with _TEST suffix"""
-        return f"{self.ELASTIC_SEARCH_PRODUCT_INDEX}_TEST" if self.DEBUG else self.ELASTIC_SEARCH_PRODUCT_INDEX
-
-    @computed_field(return_type=str)
-    @property
-    def DB_NAME(self) -> str:
-        """Active database name"""
-        return self.DB_DATABASE_TEST
-
-    @computed_field(return_type=str)
-    @property
-    def ES_INDEX_NAME(self) -> str:
-        """Active Elasticsearch index name"""
-        return self.ELASTICSEARCH_INDEX_TEST
 
 settings = Settings()

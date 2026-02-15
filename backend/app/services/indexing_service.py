@@ -4,6 +4,7 @@ from app.models import Product
 from app.connectors import get_es
 from app.utils import get_logger
 from app.models import ProductCreate
+from app.settings import settings
 from elasticsearch import helpers
 
 logger = get_logger(__name__)
@@ -53,7 +54,7 @@ class IndexingService:
                 
                 # Add document in Elasticsearch bulk format
                 docs.append({
-                    "_index": "products",
+                    "_index": settings.ELASTICSEARCH_INDEX_NAME,
                     "_id": str(product_pydantic.id),
                     **product_pydantic.model_dump()
                 })
@@ -85,11 +86,11 @@ class IndexingService:
     async def _generate_docs(self, products_data: List[dict]):
         """Async generator to yield documents for bulk indexing"""
         for product_data in products_data:
-            # Use SKU as document ID if available, otherwise use a generated ID
-            doc_id = product_data.get('sku', str(hash(str(product_data))))
+          
+            doc_id = product_data.get('id', str(hash(str(product_data))))
             
             yield {
-                "_index": "products",
+                "_index": settings.ELASTICSEARCH_INDEX_NAME,
                 "_id": doc_id,
                 "_source": product_data
             }
