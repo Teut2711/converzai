@@ -5,6 +5,7 @@ from app.connectors import get_es
 from app.utils import get_logger
 from app.models import ProductCreate
 from app.settings import settings
+from backend.app.models.product import Product_Pydantic_List
 from elasticsearch import helpers
 
 logger = get_logger(__name__)
@@ -21,15 +22,6 @@ class IndexingService:
 
 
     async def bulk_index_products(self, products: List[Product]) -> int:
-        """
-        Bulk index multiple products to Elasticsearch using async_bulk helper.
-        
-        Args:
-            products: List of Product ORM models with related data prefetched
-        
-        Returns:
-            int: Number of successfully indexed products
-        """
         if not products:
             logger.info("No products to index")
             return 0
@@ -41,41 +33,20 @@ class IndexingService:
         if es_client is None:
             logger.error("Elasticsearch client not available")
             return 0
-        
-        # Prepare documents for bulk indexing
-        docs = []
-        for product in products:
-            try:
-                # Convert ORM to Pydantic for serialization
-                product_pydantic = await Product_Pydantic.from_tortoise_orm(product)
-                
-                # Add document in Elasticsearch bulk format
-                docs.append({
-                    "_index": self.index_name,
-                    "_id": str(product_pydantic.id),
-                    **product_pydantic.model_dump()
-                })
-                
-            except Exception as e:
-                logger.error(f"Error preparing product {product.id} for bulk indexing: {e}")
-                continue
-        
-        if not docs:
-            logger.warning("No documents prepared for indexing")
-            return 0
-        
+        products_data = Product_Pydantic_List.from_queryset(products)
+       
         # Use async_bulk helper for efficient bulk indexing
         success_count, errors = await helpers.async_bulk(
             es_client, 
-            docs, 
+            self._generate_docs_model(products_data), 
             chunk_size=100,
             request_timeout=60
         )
         
         if errors:
             logger.warning(f"Bulk indexing completed with {len(errors)} errors")
-        
-        logger.info(f"Bulk indexing completed: {success_count}/{len(docs)} products")
+        logger.info(f"Bulk indexing completed: {success_count}/{len(products_data)} products")
+
         return success_count
             
         
@@ -86,7 +57,7 @@ class IndexingService:
             doc_id = doc["id"]
 
             yield {
-                "_index": settings.ELASTICSEARCH_INDEX_NAME,
+                "_index": self.index_name,
                 "_id": str(doc_id),
                 "_source": doc
             }
